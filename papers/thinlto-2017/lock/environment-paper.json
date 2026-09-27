@@ -2,6 +2,8 @@
   "schema": "cpp-paper-repro.environment/v1",
   "identity": "cgo-2017-thinlto",
   "status": "partial",
+  "p0_paper_facts": "closed",
+  "p0_artifact_reconstruction": "in_progress",
   "locked_on": "2026-09-27",
   "changes_claim_criteria": false,
   "protocol": "not written",
@@ -18,7 +20,12 @@
     "paper_statement": "clang/LLVM (v4.0), and GCC (v7.0) compilers built from recent (August 2016) upstream development sources",
     "paper_gives_commit": false,
     "exact_revision": "unresolved",
-    "future_pin_rule": "A later SVN or git revision is a reconstructed pin from an external artifact. It must not be labeled as a revision the paper stated.",
+    "time_anchor": {
+      "fact": "Clang 3.9.0 final was tagged 2016-08-31 from the 3.9 branch at r280312 and announced 2016-09-02. That release includes -flto=thin. The release notes, last updated 2016-08-31, still say ThinLTO is new and point at the June blog.",
+      "compatible_with_paper": "A v4.0 development compiler in August 2016 can already have -flto=thin. That does not identify one commit.",
+      "not_a_pin": true
+    },
+    "future_pin_rule": "Only a paper, a contemporaneous author artifact, an explicit benchmark or build record, or another verifiable historical build may become a reconstructed pin. A commit chosen because the date is close is not a pin.",
     "rejected_pins": [
       {
         "id": "llvmorg-4.0.0",
@@ -27,6 +34,12 @@
       {
         "id": "gcc-7.1.0",
         "why": "A later release. The paper's v7.0 is the August 2016 development line, not a release tarball."
+      },
+      {
+        "id": "llvm-3.9.0",
+        "svn": "r280312",
+        "tagged": "2016-08-31",
+        "why": "The 3.9 release, not the paper's v4.0 development sources. It shows -flto=thin already existed. It is not the compiler under test."
       }
     ]
   },
@@ -146,7 +159,9 @@
         "url": "https://blog.llvm.org/2016/06/thinlto-scalable-and-incremental-lto.html",
         "frequent_header": "DenseMap::grow()",
         "infrequent_source": "visitCallInst() in InstCombineCalls.cpp",
-        "if_used_later": "Directional operationalization, not an Exact paper workload, unless a script for this paper is found"
+        "build_machine": "20-core 2.8GHz Intel Xeon CPU E5-2680 v2, Linux, gold, ninja clang",
+        "not_section_8_3": "Published before the paper's August 2016 sources, on a different machine from the 16-core ES-2690 host. Related earlier experiment, not the CGO section 8.3 run.",
+        "if_used_later": "Directional operationalization only. Not an Exact paper workload."
       }
     ]
   },
@@ -164,12 +179,63 @@
       "why": "They are not the cache Section 3 describes. Turning them on, or turning the ThinLTO backend cache off, measures a different build."
     }
   },
-  "still_unresolved_before_claims": [
-    "exact clang/LLVM and GCC revisions, as reconstructed pins if an external artifact appears",
-    "Clang and Chromium source revisions",
-    "gold, binutils, CMake, and Ninja versions",
-    "the concrete header and function for the two incremental edits"
-  ],
+  "search_stop_rule": {
+    "accept_as_reconstructed_pin": [
+      "the paper",
+      "contemporaneous author material",
+      "an explicit benchmark or build artifact",
+      "a verifiable historical build record"
+    ],
+    "reject": "a commit or checkout selected because its date is close",
+    "when_those_sources_are_exhausted": "unresolved-after-search",
+    "not_yet_exhausted": ["clang source revision", "chromium source revision"]
+  },
+  "unresolved_classes": {
+    "must_resolve_before_a_matrix": [
+      {
+        "item": "clang source revision",
+        "why": "The build graph and the binary being linked are the section 8.2 and 8.3 subject."
+      },
+      {
+        "item": "chromium source revision",
+        "why": "Link size and the build graph move with the checkout. A nearby revision does not correspond to section 8.2."
+      },
+      {
+        "item": "build flags that define the experiment",
+        "why": "Optimization level, debug info, thread count, and which LTO mode is on are the comparison. The -O2 versus -O3 conflict stays unresolved rather than being picked."
+      }
+    ],
+    "may_freeze_as_paper_unspecified": [
+      {
+        "item": "gold, binutils, CMake, and Ninja versions",
+        "paper": "names gold, and does not name these versions",
+        "if_still_absent": "paper-unspecified",
+        "later_choice": "project_operationalization",
+        "blocks_a_directional_protocol": false,
+        "affects": "Exact fidelity only"
+      }
+    ],
+    "may_remain_unresolved_without_blocking_directional_claims": [
+      "exact compiler revision",
+      "exact dirty path and function"
+    ]
+  },
+  "if_reconstruction_stops": {
+    "historical_fidelity": {
+      "compiler_family_and_date": "locked",
+      "exact_compiler_revision": "unresolved",
+      "paper_dirty_edit_semantics": "locked",
+      "exact_dirty_path_and_function": "unresolved"
+    },
+    "public_reproduction": {
+      "clang_source_pin": "reconstructed, only with cross-evidence",
+      "chromium_source_pin": "reconstructed, only with cross-evidence",
+      "incremental_edit": "directional operationalization"
+    },
+    "exact_claims_that_need_the_missing_facts": "not testable",
+    "directional_and_mechanistic_claims": "eligible for a protocol",
+    "protocol_status_now": "still not written"
+  },
   "search_2026_09_27": {
     "sought": ["paper benchmark script", "SVN or git revision", "dirty-file path in the paper"],
     "also_read": [
@@ -179,5 +245,20 @@
     "paper_script_found": false,
     "paper_revision_found": false,
     "paper_dirty_path_found": false
+  },
+  "search_2026_09_27_source_pins": {
+    "sought": ["clang checkout matching the paper", "chromium checkout matching the paper"],
+    "looked_at": [
+      "LLVM 3.9.0 release announcement, 2016-09-02, tag r280312",
+      "https://blog.llvm.org/2016/06/thinlto-scalable-and-incremental-lto.html",
+      "Chromium use_thin_lto, 2016-09-12, crrev 8e6253caa689d2c20f5173406f1e7cb64d7f9b0f"
+    ],
+    "not_pins": [
+      {
+        "id": "chromium use_thin_lto at master@{#418098}",
+        "why": "A later switch, default off, described as starting to evaluate ThinLTO. It cites the June blog, not this paper, and does not identify the checkout behind section 8.2."
+      }
+    ],
+    "reconstructed_pin": null
   }
 }
