@@ -4,4 +4,4 @@
 
 Teresa Johnson, Mehdi Amini, Xinliang David Li. *ThinLTO: Scalable and Incremental LTO*. CGO 2017.
 
-论文事实的部分锁定在 [lock/environment-paper.json](lock/environment-paper.json)。还没锁的步骤在 [CONSIDERATION.md](CONSIDERATION.md)。
+论文事实在 [lock/environment-paper.json](lock/environment-paper.json)。源码检索已停，没有 checkout pin。还没写的边界在 [CONSIDERATION.md](CONSIDERATION.md)。

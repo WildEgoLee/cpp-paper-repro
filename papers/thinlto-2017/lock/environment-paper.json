@@ -3,7 +3,7 @@
   "identity": "cgo-2017-thinlto",
   "status": "partial",
   "p0_paper_facts": "closed",
-  "p0_artifact_reconstruction": "in_progress",
+  "p0_artifact_reconstruction": "stopped",
   "locked_on": "2026-09-27",
   "changes_claim_criteria": false,
   "protocol": "not written",
@@ -77,14 +77,22 @@
       {
         "id": "clang",
         "paper": "The Clang compiler. Open source.",
-        "public_reproduction": "in scope once a source revision is locked",
-        "source_revision": "unresolved"
+        "public_reproduction": "no checkout identified",
+        "paper_source_revision": "unresolved-after-search",
+        "project_source_pin": null,
+        "pin_class": null,
+        "supports_exact": false,
+        "scale_corroborated_without_a_revision": "November 2016 author slides show 1,938 Clang IR files and 217 MB at -g0, the same scale as the paper, and still name no checkout"
       },
       {
         "id": "chromium",
         "paper": "Chromium, an open-source web browser.",
-        "public_reproduction": "in scope once a source revision is locked",
-        "source_revision": "unresolved"
+        "public_reproduction": "no checkout identified",
+        "paper_source_revision": "unresolved-after-search",
+        "project_source_pin": null,
+        "pin_class": null,
+        "supports_exact": false,
+        "scale_corroborated_without_a_revision": "The same slides show 17,798 Chromium IR files and 706 MB at -g0. No DEPS revision or gn args are attached."
       },
       {
         "id": "ad-delivery",
@@ -188,36 +196,47 @@
     ],
     "reject": "a commit or checkout selected because its date is close",
     "when_those_sources_are_exhausted": "unresolved-after-search",
-    "not_yet_exhausted": ["clang source revision", "chromium source revision"]
+    "source_revision_search": "exhausted",
+    "do_not_widen_to": ["gold version", "binutils version", "CMake version", "Ninja version"]
   },
   "unresolved_classes": {
-    "must_resolve_before_a_matrix": [
+    "must_resolve_before_exact_matrix": [
       {
         "item": "clang source revision",
-        "why": "The build graph and the binary being linked are the section 8.2 and 8.3 subject."
+        "status": "unresolved-after-search",
+        "why": "Exact section 8.2 and 8.3 claims need the checkout that produced the paper's build graph."
       },
       {
         "item": "chromium source revision",
-        "why": "Link size and the build graph move with the checkout. A nearby revision does not correspond to section 8.2."
+        "status": "unresolved-after-search",
+        "why": "Exact section 8.2 claims need the checkout behind the published link size."
       },
       {
         "item": "build flags that define the experiment",
-        "why": "Optimization level, debug info, thread count, and which LTO mode is on are the comparison. The -O2 versus -O3 conflict stays unresolved rather than being picked."
+        "status": "partially locked from the paper; -O2 versus -O3 remains a conflict",
+        "why": "An exact matrix cannot pick a side of that conflict."
       }
     ],
-    "may_freeze_as_paper_unspecified": [
+    "may_operationalize_before_directional_matrix": [
+      {
+        "item": "clang or chromium checkout",
+        "rule": "A later public checkout may be recorded only as pin_class operationalization, with supports_exact false. It is not a reconstructed pin. None is recorded now, because no build log or revision string selects one."
+      }
+    ],
+    "paper_unspecified": [
       {
         "item": "gold, binutils, CMake, and Ninja versions",
+        "status": "paper-unspecified",
         "paper": "names gold, and does not name these versions",
-        "if_still_absent": "paper-unspecified",
         "later_choice": "project_operationalization",
         "blocks_a_directional_protocol": false,
-        "affects": "Exact fidelity only"
+        "search": "not extended"
       }
     ],
     "may_remain_unresolved_without_blocking_directional_claims": [
       "exact compiler revision",
-      "exact dirty path and function"
+      "exact dirty path and function",
+      "clang and chromium source revisions"
     ]
   },
   "if_reconstruction_stops": {
@@ -228,8 +247,9 @@
       "exact_dirty_path_and_function": "unresolved"
     },
     "public_reproduction": {
-      "clang_source_pin": "reconstructed, only with cross-evidence",
-      "chromium_source_pin": "reconstructed, only with cross-evidence",
+      "clang_source_pin": null,
+      "chromium_source_pin": null,
+      "pin_class_if_a_checkout_is_chosen_later": "operationalization",
       "incremental_edit": "directional operationalization"
     },
     "exact_claims_that_need_the_missing_facts": "not testable",
@@ -260,5 +280,34 @@
       }
     ],
     "reconstructed_pin": null
+  },
+  "search_2026_09_27_final_source_round": {
+    "priority": ["clang workload checkout", "chromium checkout and build flags", "toolchain versions not searched further"],
+    "looked_at": [
+      "https://llvm.org/devmtg/2016-11/Slides/Amini-Johnson-ThinLTO.pdf",
+      "https://blog.llvm.org/2016/06/thinlto-scalable-and-incremental-lto.html",
+      "https://www.youtube.com/watch?v=9OIEZAj243g",
+      "Chromium crbug 583183, 2016-08-11, full LTO gn args allow_posix_link_time_opt=true",
+      "Chromium use_thin_lto, 2016-09-12",
+      "Chromium ThinLTO Linux ToT bot, 2016-09-13, master@{#418150}",
+      "Chromium thinlto jobs=8, 2016-12-07, master@{#436805}",
+      "current Clang ThinLTO bootstrap CMake text, which is not a 2016 CMakeCache"
+    ],
+    "found": {
+      "slide_scale_matches_paper": true,
+      "slide_machine_for_chromium_charts": "16-core E5-2690 @ 2.90GHz",
+      "slide_incremental_clang_machine": "2013 Mac Pro, 12-core E5-2697, ninja clang, names DenseMap::grow()",
+      "svn_or_deps_or_cmakecache": false
+    },
+    "rejected_as_pins": [
+      "any August 2016 LLVM commit chosen by date",
+      "Chromium use_thin_lto",
+      "the September 2016 ThinLTO ToT bot",
+      "the December 2016 jobs=8 flag, which is later and is not the paper's 8/16/32 sweep",
+      "the August 2016 full-LTO gn args"
+    ],
+    "paper_source_revision": "unresolved-after-search",
+    "project_source_pin": null,
+    "search_widened": false
   }
 }
