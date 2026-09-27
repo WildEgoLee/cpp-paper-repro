@@ -9,8 +9,10 @@ def validate_resolved(command: dict[str, Any]) -> None:
     workload = command["workload"]
     threads = command["logical_threads"]
     roles = command["parameter_roles"]
-    if command["measurement_subject"] not in ("foreground", "server"):
-        raise ValueError("measurement_subject must be foreground or server")
+    if "metrics" not in command or "concurrency" not in command:
+        raise ValueError("metrics and concurrency are required")
+    _validate_metrics(command)
+    _validate_concurrency(command)
     if workload == "redis":
         _validate_redis(command, threads, roles)
     elif workload == "alloc-test":
@@ -29,6 +31,10 @@ def validate_resolved(command: dict[str, Any]) -> None:
             raise ValueError("xmalloc -w is not logical_threads")
         if roles["os_threads"] != 2 * threads:
             raise ValueError("xmalloc os_threads must be 2*logical_threads")
+        if command["concurrency"]["effective_worker_threads"] != 2 * threads:
+            raise ValueError("xmalloc effective_worker_threads must be 2*logical_threads")
+        if command["concurrency"]["scaling_report_uses"] != "effective_worker_threads":
+            raise ValueError("xmalloc scaling reports must not use the matrix column")
         if roles.get("bench_sh_formula_not_used") is None:
             raise ValueError("xmalloc must record the rejected 2*procs formula")
     else:
@@ -60,3 +66,35 @@ def _validate_redis(command: dict[str, Any], threads: int, roles: dict[str, Any]
         raise ValueError("perf must not wrap redis-benchmark")
     if command["server_argv"] != ["{artifact:redis-server}"]:
         raise ValueError("redis server argv drifted")
+    if command["concurrency"]["scaling_row"] is not False:
+        raise ValueError("redis is not a scaling row")
+    if command["concurrency"]["effective_worker_threads"] is not None:
+        raise ValueError("redis has no worker-thread count")
+    if command["metrics"]["perf"] != {"subject": "server", "window": "request-window"}:
+        raise ValueError("redis perf must be the server request window")
+    if command["metrics"]["throughput"]["subject"] != "client":
+        raise ValueError("redis throughput belongs to the client")
+    if command["metrics"]["peak_rss"] != {"subject": "server", "window": "lifetime"}:
+        raise ValueError("redis peak RSS is the server lifetime")
+
+
+def _validate_metrics(command: dict[str, Any]) -> None:
+    for name, spec in command["metrics"].items():
+        if spec["subject"] not in ("foreground", "server", "client"):
+            raise ValueError(f"{name} has no subject")
+        if spec["window"] not in ("lifetime", "request-window"):
+            raise ValueError(f"{name} has no window")
+    if command["workload"] != "redis":
+        if command["metrics"]["perf"]["window"] != "lifetime":
+            raise ValueError("foreground perf must cover the process lifetime")
+        if "perf_stat_on_foreground_pid" in command["lifecycle"]:
+            raise ValueError("perf must not attach after the process has already started")
+
+
+def _validate_concurrency(command: dict[str, Any]) -> None:
+    concurrency = command["concurrency"]
+    flag = concurrency["oversubscribed"]
+    if flag is not None and not isinstance(flag, bool):
+        raise ValueError("oversubscribed must be true, false, or null")
+    if not concurrency["scaling_row"] and flag is not None:
+        raise ValueError("a non-scaling row cannot be marked oversubscribed")

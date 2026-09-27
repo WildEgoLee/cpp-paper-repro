@@ -50,10 +50,36 @@ def resolve(workload: str, logical_threads: int, allocator: str) -> dict[str, An
         "allocator": allocator_id,
         "logical_threads": logical_threads,
         "env": env,
-        "allocator_check": _allocator_check(allocator_id),
+        "allocator_check": _allocator_check(allocator_id, body_subject(workload_id)),
         **body,
     }
     return resolved
+
+
+def body_subject(workload_id: str) -> str:
+    return "server" if workload_id == "redis" else "foreground"
+
+
+def _concurrency(logical_threads: int, workers: int | None, scaling_row: bool, axis: str | None) -> dict[str, Any]:
+    return {
+        "logical_threads": logical_threads,
+        "effective_worker_threads": workers,
+        "scaling_row": scaling_row,
+        "scaling_report_uses": axis,
+        "hardware_threads": None,
+        "oversubscribed": None,
+    }
+
+
+def stamp_oversubscription(command: dict[str, Any], hardware_threads: int | None) -> None:
+    """Fill oversubscribed from the host. None means the row is not a scaling row, or the host count is unknown."""
+    concurrency = command["concurrency"]
+    concurrency["hardware_threads"] = hardware_threads
+    workers = concurrency["effective_worker_threads"]
+    if not concurrency["scaling_row"] or workers is None or hardware_threads is None:
+        concurrency["oversubscribed"] = None
+        return
+    concurrency["oversubscribed"] = workers > hardware_threads
 
 
 def _preload(allocator_id: str) -> dict[str, Any]:
@@ -62,24 +88,47 @@ def _preload(allocator_id: str) -> dict[str, Any]:
     return {"LD_PRELOAD": "{lib:%s}" % allocator_id}
 
 
-def _allocator_check(allocator_id: str) -> dict[str, Any]:
+def _allocator_check(allocator_id: str, subject: str) -> dict[str, Any]:
     others = ["mimalloc-v1.0.0", "jemalloc", "tcmalloc"]
     if allocator_id == "glibc":
         return {
             "method": "proc_maps",
-            "subject": "measurement_subject",
+            "subject": subject,
             "require_absent": ["{lib:%s}" % name for name in others],
             "require_present": [],
         }
     return {
         "method": "proc_maps",
-        "subject": "measurement_subject",
+        "subject": subject,
         "require_present": ["{lib:%s}" % allocator_id],
         "require_absent": ["{lib:%s}" % name for name in others if name != allocator_id],
     }
 
 
-def _foreground(argv: list[str], thread_effect: str, roles: dict[str, Any], notes: list[str]) -> dict[str, Any]:
+FOREGROUND_METRICS = {
+    "wall_time": {"subject": "foreground", "window": "lifetime"},
+    "peak_rss": {"subject": "foreground", "window": "lifetime"},
+    "perf": {"subject": "foreground", "window": "lifetime"},
+}
+
+# perf wraps the process from exec. Attaching after spawn misses startup and
+# races short workloads, so that order is not the contract.
+FOREGROUND_LIFECYCLE = [
+    "exec_under_perf_stat_covering_lifetime",
+    "verify_allocator_while_process_is_alive",
+    "wait_exit",
+    "parse_lifetime_wall_time_peak_rss_and_perf",
+]
+
+
+def _foreground(
+    argv: list[str],
+    thread_effect: str,
+    roles: dict[str, Any],
+    notes: list[str],
+    logical_threads: int,
+    workers: int,
+) -> dict[str, Any]:
     return {
         "measurement_subject": "foreground",
         "thread_effect": thread_effect,
@@ -87,13 +136,9 @@ def _foreground(argv: list[str], thread_effect: str, roles: dict[str, Any], note
         "server_argv": None,
         "client_argv": None,
         "parameter_roles": roles,
-        "lifecycle": [
-            "spawn_foreground",
-            "verify_allocator_on_foreground_pid",
-            "perf_stat_on_foreground_pid",
-            "wait_exit",
-            "parse_wall_time_rss_and_perf",
-        ],
+        "metrics": FOREGROUND_METRICS,
+        "concurrency": _concurrency(logical_threads, workers, True, "logical_threads" if workers == logical_threads else "effective_worker_threads"),
+        "lifecycle": list(FOREGROUND_LIFECYCLE),
         "notes": notes,
     }
 
@@ -110,8 +155,10 @@ def _alloc_test(logical_threads: int) -> dict[str, Any]:
             "max_items": "1048576 / logical_threads",
         },
         notes=[
-            "logical_threads is argv[1]. The binary then divides maxItems by that count.",
+            "logical_threads is argv[1] and the worker count. The binary then divides maxItems by that count.",
         ],
+        logical_threads=logical_threads,
+        workers=logical_threads,
     )
 
 
@@ -134,6 +181,8 @@ def _larson(logical_threads: int) -> dict[str, Any]:
             "logical_threads replaces only argv[7]. The historical script always passed 100 there and ignored --procs.",
             "min_threads is set equal to max_threads by larson.cpp when argc > 7.",
         ],
+        logical_threads=logical_threads,
+        workers=logical_threads,
     )
 
 
@@ -165,7 +214,10 @@ def _xmalloc(logical_threads: int) -> dict[str, Any]:
             "logical_threads is -w: that many producers and that many consumers.",
             "os_threads is 2*logical_threads. The 2019 script's extra doubling is recorded and not applied.",
             "The paper point is -w 100 (100 producers and 100 consumers), outside the 96.",
+            "A scaling report uses effective_worker_threads, not the matrix column.",
         ],
+        logical_threads=logical_threads,
+        workers=2 * logical_threads,
     )
 
 
@@ -210,23 +262,30 @@ def _redis(logical_threads: int) -> dict[str, Any]:
             "requests": REDIS_REQUESTS,
             "key": "a",
         },
+        "metrics": {
+            "throughput": {"subject": "client", "window": "request-window"},
+            "wall_time": {"subject": "client", "window": "request-window"},
+            "perf": {"subject": "server", "window": "request-window"},
+            "peak_rss": {"subject": "server", "window": "lifetime"},
+        },
+        "concurrency": _concurrency(logical_threads, None, False, None),
         "lifecycle": [
             "spawn_server_with_preload",
             "wait_until_redis_cli_ping_pongs",
             "verify_allocator_on_server_pid",
-            "perf_stat_attached_to_server_pid",
+            "begin_request_window_perf_on_server",
             "run_client_one_million_requests",
-            "stop_perf",
+            "end_request_window_perf",
             "redis_cli_shutdown",
             "wait_server_exit",
-            "parse_throughput_from_client_stdout",
-            "parse_perf_and_rss_from_server",
+            "parse_client_request_window",
+            "parse_server_lifetime_peak_rss",
         ],
         "notes": [
             "logical_threads does not change the server or the client argv.",
-            "Redis 5.0.3 in this recipe has no worker-thread flag. Six matrix rows are the same command, not a scaling curve.",
+            "This is not a scaling row. Six matrix keys share one execution.",
             "-P 8 is pipeline depth from bench.sh. It is not the matrix thread column.",
-            "perf and RSS belong to the server pid. redis-benchmark is not the measurement subject.",
+            "throughput and wall_time are the client request window. perf is the server during that same window. peak RSS is the server's whole lifetime, not the client's.",
             "bench.sh slept 2 seconds instead of waiting for PING. This lifecycle waits for PONG.",
         ],
     }

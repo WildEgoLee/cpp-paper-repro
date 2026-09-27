@@ -45,7 +45,7 @@ def _median(ordered: list[float]) -> float:
 
 
 def _nearest_rank(ordered: list[float], fraction: float) -> float:
-    # ceil(fraction * n), 1-based, then back to 0-based. n=15, p95 -> index 13.
+    # ceil(0.95 * n) is the 1-based rank. n=15, p95 -> rank 15, index 14.
     n = len(ordered)
     rank = max(1, math.ceil(fraction * n))
     return float(ordered[rank - 1])

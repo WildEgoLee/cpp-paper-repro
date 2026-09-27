@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Any
 
 from . import PLAN_SEED, SCHEMA_PLAN
-from .adapters import resolve
+from .adapters import resolve, stamp_oversubscription
 from .validate import validate_resolved
 
 BENCH_DIR = Path(__file__).resolve().parent.parent
@@ -28,7 +28,12 @@ def load_matrix(path: Path | None = None) -> dict[str, Any]:
     return json.loads((path or MATRIX_PATH).read_text())
 
 
-def expand(profile: str, matrix: dict[str, Any] | None = None, seed: int = PLAN_SEED) -> dict[str, Any]:
+def expand(
+    profile: str,
+    matrix: dict[str, Any] | None = None,
+    seed: int = PLAN_SEED,
+    hardware_threads: int | None = None,
+) -> dict[str, Any]:
     if profile not in PROFILES:
         raise ValueError(f"unknown profile {profile!r}")
     spec = PROFILES[profile]
@@ -45,6 +50,7 @@ def expand(profile: str, matrix: dict[str, Any] | None = None, seed: int = PLAN_
             block = []
             for allocator in allocators:
                 command = resolve(workload, int(logical_threads), allocator)
+                stamp_oversubscription(command, hardware_threads)
                 validate_resolved(command)
                 for phase, count in (("warmup", warmup), ("measured", measured)):
                     for repetition in range(1, count + 1):
@@ -55,12 +61,24 @@ def expand(profile: str, matrix: dict[str, Any] | None = None, seed: int = PLAN_
 
     invocations = [item for block in blocks for item in block]
     configurations = len(allocators) * len(workloads) * len(threads)
+    equivalence = {item["execution_equivalence_key"] for item in invocations}
     return {
         "schema": SCHEMA_PLAN,
         "profile": profile,
         "seed": seed,
         "shuffle": "inside each (workload, logical_threads) block; blocks stay in matrix order",
         "executes": False,
+        "hardware_threads_at_plan": hardware_threads,
+        "windows": {
+            "lifetime": "process exec through process exit, including startup",
+            "request-window": "client request start through client completion; excludes server startup and shutdown",
+        },
+        "analysis": {
+            "matrix_column_is_not_os_threads": True,
+            "xmalloc_scaling_axis": "effective_worker_threads",
+            "redis_rows_are_not_scaling_evidence": True,
+            "group_identical_executions_by": "execution_equivalence_key",
+        },
         "acceptance_statistics": "protocol_statistics",
         "protocol_statistics": {
             "sample": "measured repetitions only",
@@ -73,6 +91,7 @@ def expand(profile: str, matrix: dict[str, Any] | None = None, seed: int = PLAN_
             "note": "Generable later from raw samples. Must not replace protocol_statistics.",
         },
         "configurations": configurations,
+        "execution_equivalence_keys": len(equivalence),
         "invocations": len(invocations),
         "invocation_list": invocations,
     }
@@ -89,8 +108,24 @@ def _invocation(command: dict[str, Any], phase: str, repetition: int) -> dict[st
     return {
         "key": key,
         "id": invocation_id(key),
+        "resolved_configuration_id": _configuration_id(command),
+        "execution_equivalence_key": _equivalence_key(command),
         "command": command,
     }
+
+
+def _configuration_id(command: dict[str, Any]) -> str:
+    return "{workload}/{allocator}/logical={logical_threads}".format(**command)
+
+
+def _equivalence_key(command: dict[str, Any]) -> str:
+    concurrency = command["concurrency"]
+    if not concurrency["scaling_row"]:
+        return "{workload}/{allocator}/not-a-scaling-row".format(**command)
+    return "{workload}/{allocator}/workers={workers}".format(
+        workers=concurrency["effective_worker_threads"],
+        **command,
+    )
 
 
 def invocation_id(key: dict[str, Any]) -> str:

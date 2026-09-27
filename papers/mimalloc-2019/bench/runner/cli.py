@@ -33,7 +33,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if args.cmd == "dry-run":
         host = read_host()
-        plan = expand(args.profile)
+        plan = expand(args.profile, hardware_threads=host["hardware_threads"])
         out = args.out
         out.mkdir(parents=True, exist_ok=True)
         _emit(host, out / "host.json")

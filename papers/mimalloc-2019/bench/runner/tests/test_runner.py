@@ -32,6 +32,8 @@ class ResolveTest(unittest.TestCase):
         command = resolve("alloc-test", 8, "glibc")
         self.assertEqual(command["argv"], ["{artifact:alloc-test}", "8"])
         self.assertIsNone(command["env"]["LD_PRELOAD"])
+        self.assertEqual(command["metrics"]["perf"], {"subject": "foreground", "window": "lifetime"})
+        self.assertNotIn("perf_stat_on_foreground_pid", command["lifecycle"])
         validate_resolved(command)
 
     def test_larson_changes_only_the_thread_slot(self):
@@ -47,7 +49,8 @@ class ResolveTest(unittest.TestCase):
         self.assertEqual(command["workload"], "xmalloc")
         argv = command["argv"]
         self.assertEqual(argv[argv.index("-w") + 1], "8")
-        self.assertEqual(command["parameter_roles"]["os_threads"], 16)
+        self.assertEqual(command["concurrency"]["effective_worker_threads"], 16)
+        self.assertEqual(command["concurrency"]["scaling_report_uses"], "effective_worker_threads")
         self.assertIn("2*procs", command["parameter_roles"]["bench_sh_formula_not_used"])
         validate_resolved(command)
 
@@ -61,7 +64,12 @@ class ResolveTest(unittest.TestCase):
             self.assertTrue(row["parameter_roles"]["pipeline_depth_is_not_logical_threads"])
             self.assertNotIn("perf", row["client_argv"])
             self.assertEqual(row["env"]["LD_PRELOAD"], "{lib:mimalloc-v1.0.0}")
+            self.assertEqual(row["metrics"]["perf"]["window"], "request-window")
+            self.assertEqual(row["metrics"]["peak_rss"]["window"], "lifetime")
+            self.assertFalse(row["concurrency"]["scaling_row"])
             validate_resolved(row)
+        keys = {row["concurrency"]["logical_threads"] for row in rows}
+        self.assertEqual(keys, {1, 2, 4, 6, 8, 12})
 
 
 class PlanTest(unittest.TestCase):
@@ -72,7 +80,8 @@ class PlanTest(unittest.TestCase):
         self.assertEqual(first["invocations"], 1728)
         self.assertEqual([item["id"] for item in first["invocation_list"]], [item["id"] for item in second["invocation_list"]])
         self.assertEqual(first["acceptance_statistics"], "protocol_statistics")
-        self.assertIn("Must not replace", first["paper_statistics_not_acceptance"]["note"])
+        self.assertEqual(first["execution_equivalence_keys"], 76)
+        self.assertTrue(first["analysis"]["redis_rows_are_not_scaling_evidence"])
 
     def test_shuffle_is_inside_the_block_only(self):
         plan = expand("round1")
@@ -85,6 +94,34 @@ class PlanTest(unittest.TestCase):
         # Not grouped as all-glibc then all-mimalloc.
         order = [item.split("/")[1] for item in block]
         self.assertGreater(len(set(order[:18])), 1)
+
+    def test_redis_rows_share_an_execution_and_xmalloc_can_oversubscribe(self):
+        plan = expand("round1", hardware_threads=12)
+        redis = [
+            item
+            for item in plan["invocation_list"]
+            if item["command"]["workload"] == "redis"
+            and item["command"]["allocator"] == "jemalloc"
+            and item["key"]["phase"] == "measured"
+            and item["key"]["repetition"] == 1
+        ]
+        self.assertEqual(len(redis), 6)
+        self.assertEqual(len({item["resolved_configuration_id"] for item in redis}), 6)
+        self.assertEqual(len({item["execution_equivalence_key"] for item in redis}), 1)
+        xmalloc = next(
+            item
+            for item in plan["invocation_list"]
+            if item["command"]["workload"] == "xmalloc" and item["key"]["logical_threads"] == 12
+        )
+        self.assertEqual(xmalloc["command"]["concurrency"]["effective_worker_threads"], 24)
+        self.assertTrue(xmalloc["command"]["concurrency"]["oversubscribed"])
+        alloc = next(
+            item
+            for item in plan["invocation_list"]
+            if item["command"]["workload"] == "alloc-test" and item["key"]["logical_threads"] == 12
+        )
+        self.assertFalse(alloc["command"]["concurrency"]["oversubscribed"])
+        self.assertIsNone(redis[0]["command"]["concurrency"]["oversubscribed"])
 
     def test_smoke_is_not_the_matrix(self):
         plan = expand("smoke")

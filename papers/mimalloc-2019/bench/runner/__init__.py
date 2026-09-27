@@ -4,7 +4,7 @@ This package resolves the frozen matrix into an immutable plan. It does not
 run allocators and it does not emit benchmark numbers.
 """
 
-SCHEMA_PLAN = "cpp-paper-repro.plan/v1"
+SCHEMA_PLAN = "cpp-paper-repro.plan/v2"
 SCHEMA_HOST = "cpp-paper-repro.host/v1"
 SCHEMA_ARTIFACTS = "cpp-paper-repro.artifacts/v1"
 SCHEMA_CASE = "cpp-paper-repro.case/v1"

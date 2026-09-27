@@ -1,8 +1,10 @@
 """Read the host. Do not invent missing sysfs values.
 
-Round-1 needs at least 12 hardware threads. Fewer than that still produces
-a host report; eligibility is false. Dry-run does not require eligibility.
-Actually starting the matrix does, and this package does not start it.
+Round-1 still requires 12 hardware threads. That gate covers alloc-test and
+larson, whose worker count equals the matrix column. It does not mean an
+xmalloc column of 12 fits: that row starts 24 workers. Redis is not a
+scaling row at all. Per-invocation oversubscribed is computed later from
+effective_worker_threads, not by raising this gate to 24.
 """
 
 from __future__ import annotations
@@ -35,13 +37,20 @@ def read_host() -> dict[str, Any]:
     elif threads < MIN_HARDWARE_THREADS:
         reasons.append(
             f"{threads} hardware threads < {MIN_HARDWARE_THREADS}; "
-            "6/8/12-thread points would measure oversubscription"
+            "alloc-test and larson columns above that count would be oversubscribed. "
+            "xmalloc oversubscription is recorded per invocation and does not move this gate."
         )
     return {
         "schema": SCHEMA_HOST,
         "eligible_for_round_1": eligible,
         "ineligible_reasons": reasons,
         "min_hardware_threads": MIN_HARDWARE_THREADS,
+        "gate_scope": {
+            "protects": ["alloc-test", "larson"],
+            "xmalloc": "effective_worker_threads is 2*logical_threads; oversubscribed is per invocation",
+            "redis": "not a scaling row",
+            "does_not_mean": "logical_threads=12 fits on a 12-thread host for every workload",
+        },
         "hardware_threads": threads,
         "physical_cores": cores,
         "smt": smt,
