@@ -1,13 +1,16 @@
-"""preflight and dry-run. There is no execute subcommand in this commit."""
+"""preflight, dry-run, and execute. Execute refuses an unsealed or drifted run."""
 
 from __future__ import annotations
 
 import argparse
 import json
+import subprocess
 import sys
 from pathlib import Path
 
 from .artifacts import unresolved_manifest
+from .execute import execute_run
+from .identity import IdentityMismatch, RunFrozen, assert_dry_run_allowed
 from .plan import PROFILES, expand
 from .preflight import read_host
 
@@ -24,6 +27,11 @@ def main(argv: list[str] | None = None) -> int:
     dry.add_argument("--profile", choices=sorted(PROFILES), default="round1")
     dry.add_argument("--out", type=Path, required=True)
 
+    exe = sub.add_parser("execute", help="run pending invocations in a sealed directory")
+    exe.add_argument("--run", type=Path, required=True)
+    exe.add_argument("--repo-sha", default=None)
+    exe.add_argument("--limit", type=int, default=None)
+
     args = parser.parse_args(argv)
     if args.cmd == "preflight":
         host = read_host()
@@ -32,6 +40,11 @@ def main(argv: list[str] | None = None) -> int:
             return 2
         return 0
     if args.cmd == "dry-run":
+        try:
+            assert_dry_run_allowed(args.out)
+        except RunFrozen as exc:
+            print(str(exc), file=sys.stderr)
+            return 3
         host = read_host()
         plan = expand(args.profile, hardware_threads=host["hardware_threads"])
         out = args.out
@@ -45,7 +58,22 @@ def main(argv: list[str] | None = None) -> int:
             f"out={out}"
         )
         return 0
+    if args.cmd == "execute":
+        try:
+            result = execute_run(args.run, args.repo_sha or _repo_sha(), limit=args.limit)
+        except (IdentityMismatch, RunFrozen, FileNotFoundError, RuntimeError) as exc:
+            print(str(exc), file=sys.stderr)
+            return 4
+        print(json.dumps(result))
+        return 0
     return 1
+
+
+def _repo_sha() -> str:
+    ran = subprocess.run(["git", "rev-parse", "HEAD"], check=False, capture_output=True, text=True)
+    if ran.returncode != 0 or not ran.stdout.strip():
+        raise RuntimeError("repo sha unavailable")
+    return ran.stdout.strip()
 
 
 def _emit(payload: dict, path: Path | None) -> None:

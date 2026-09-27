@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Any
 
 from . import SCHEMA_CASE
-from .plan import case_path, invocation_id
+from .plan import case_path, invocation_id, scheduled_invocations
 
 
 def is_complete(record: dict[str, Any]) -> bool:
@@ -23,7 +23,16 @@ def is_complete(record: dict[str, Any]) -> bool:
         return False
     metrics = record.get("metrics") or {}
     check = record.get("allocator_check") or {}
-    return metrics.get("parsed") is True and check.get("ok") is True
+    if metrics.get("parsed") is not True or check.get("ok") is not True:
+        return False
+    perf = metrics.get("perf")
+    if isinstance(perf, dict) and perf.get("session") == "error":
+        return False
+    coverage = record.get("metric_coverage") or {}
+    for name in ("wall_time", "peak_rss"):
+        if coverage.get(name) in ("parse-error", "error"):
+            return False
+    return True
 
 
 def write_case(run_dir: Path, record: dict[str, Any]) -> Path:
@@ -49,7 +58,7 @@ def read_case(path: Path) -> dict[str, Any] | None:
 def pending(plan: dict[str, Any], run_dir: Path) -> list[dict[str, Any]]:
     """Invocations that still need to run. Completed ones are skipped."""
     left = []
-    for item in plan["invocation_list"]:
+    for item in scheduled_invocations(plan):
         path = case_path(run_dir, item["key"])
         record = read_case(path)
         if record is None or not is_complete(record):

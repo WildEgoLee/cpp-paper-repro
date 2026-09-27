@@ -1,33 +1,21 @@
 # runner
 
-P1.1 的执行契约。仍然只有 preflight 和 dry-run，没有 execute，也没有 benchmark 数字。
+P1.2 executor。没有真实 allocator 的 benchmark 数字。smoke 不在这台机器上跑。
 
-冻结矩阵没改。`logical_threads` 是矩阵列，不是 OS 线程数。
+`execution_equivalence_key` 只给分析分组。`deduplicate_execution` 是 false。round-1 仍然调度 1728 条 invocation。resume 只认 `invocation_id`。Redis 的六行不能被合并掉。
 
-| 矩阵列 = 12 | 实际并发 | 扩展性图用哪一列 |
-| --- | --- | --- |
-| alloc-test、larson | 12 个 worker | 矩阵列。12 个硬件线程的门槛只保护这两项 |
-| xmalloc | 12 个生产者 + 12 个消费者 = 24 | `effective_worker_threads`。在 12 硬件线程上 `oversubscribed=true`。门槛不因此改成 24 |
-| redis | 命令不随矩阵列变化 | 不是 scaling row。`oversubscribed` 是 null |
+执行前会把 `{artifact:*}` / `{lib:*}` 解析成绝对路径并写入 SHA-256。glibc 记的是本机 `libc.so.6` 和 loader，不是一个 preload 文件。resume 时重新哈希；对不上就拒绝。run 一旦 seal，dry-run 不能覆盖 `plan.json`。
 
-Redis 的 1/2/4/6/8/12 有六个 `resolved_configuration_id`，但同一个 `execution_equivalence_key`。1728 次都还在。C1 和扩展性图不能把这六行当成线程扩展。
+子进程环境会先去掉调用者的 `LD_PRELOAD`，再只放计划里的那一个。foreground 在 `exec` 之前停住，父进程拿到 pid、装好测量，再放行。`/proc/<pid>/maps` 要对解析后的真实路径，basename 不算命中。peak RSS 来自这个 child 的 `wait4` `ru_maxrss`（KiB）。`perf stat -p` 不带 `--no-inherit`。
 
-每个 metric 自己带 subject 和 window：
+perf 缺失或 `<not supported>` 是单个计数器的 `unavailable` / `unsupported`，case 仍可以 complete。输出解析不了才是 `parsed: false`，raw 文件留下，下一次 resume 写新的 attempt，不删旧的。
 
-| workload | wall / throughput | perf | peak RSS |
-| --- | --- | --- | --- |
-| foreground | 进程 lifetime | 进程 lifetime。`perf stat` 从 exec 包住进程，不允许先启动再 attach | 进程 lifetime |
-| redis | client 的 request-window | server 的同一段 request-window | server 的 lifetime，不是 client |
-
-`request-window` 不含 server 启动和 shutdown。进程在校验 `/proc/maps` 之前已经退出，这次 invocation 不算 complete。
-
-round-1 的 12 硬件线程门槛还在，作用范围写在 `host.json` 的 `gate_scope`。xmalloc 的超订按 invocation 记，不抬高这个门槛。
+Redis 的 server 是 runner 的直接 child。PING 之后查 maps，再对 server 打开 request-window 的 perf，然后才跑 client。client 成功但 server 失败，不算 complete。client 不继承 `LD_PRELOAD`。
 
 ```bash
 cd papers/mimalloc-2019/bench
-python3 -m runner preflight --strict
-python3 -m runner dry-run --profile round1 --out runs/dry-round1
-python3 -m unittest runner.tests.test_runner
+python3 -m unittest runner.tests.test_runner runner.tests.test_execute
+python3 -m runner execute --run runs/some-sealed-dir
 ```
 
-`runs/` 不入库。正式执行是下一笔，不在这个提交里。
+`runs/` 不入库。32 次真实 smoke 等至少 12 个硬件线程的 Linux。

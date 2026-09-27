@@ -92,6 +92,11 @@ def expand(
         },
         "configurations": configurations,
         "execution_equivalence_keys": len(equivalence),
+        "execution_equivalence_key_policy": {
+            "analysis_only": True,
+            "deduplicate_execution": False,
+            "resume_identity": "invocation_id",
+        },
         "invocations": len(invocations),
         "invocation_list": invocations,
     }
@@ -126,6 +131,19 @@ def _equivalence_key(command: dict[str, Any]) -> str:
         workers=concurrency["effective_worker_threads"],
         **command,
     )
+
+
+def scheduled_invocations(plan: dict[str, Any]) -> list[dict[str, Any]]:
+    """Every invocation, including Redis rows that share an equivalence key.
+
+    The equivalence key is for analysis. It must not be used to skip work.
+    """
+    policy = plan.get("execution_equivalence_key_policy") or {}
+    if policy.get("analysis_only") is not True or policy.get("deduplicate_execution") is not False:
+        raise RuntimeError("execution_equivalence_key is analysis-only and must not deduplicate")
+    if policy.get("resume_identity") != "invocation_id":
+        raise RuntimeError("resume identity must be the invocation id")
+    return list(plan["invocation_list"])
 
 
 def invocation_id(key: dict[str, Any]) -> str:

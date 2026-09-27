@@ -50,7 +50,7 @@ mimalloc：
 | [results/environment-paper.json](results/environment-paper.json) | 论文机器、v1.0.0、jemalloc 5.2.0、Ubuntu tcmalloc 2.5-2.2ubuntu3、mimalloc-bench `874d1b83` |
 | [harness/](harness) | 不依赖上游库的机制探针。不再往这里加实验 |
 | [bench/matrix.json](bench/matrix.json) | 96 组，`frozen-not-run`。矩阵没有改 |
-| [bench/runner](bench/runner) | 执行契约。矩阵列不等于 OS 线程数。仍不产生 benchmark 数字 |
+| [bench/runner](bench/runner) | executor。fake 命令测过。还没有真实 allocator 数字 |
 | [results/](results) | 机制探针一次运行，加上上面的历史锁定 |
 
 对照实验要在 Linux 上跑。Windows（系统堆、MSVC `/MD`、clang-cl）是第二阶段的可移植性实验，不混进第一轮的 96 组里。

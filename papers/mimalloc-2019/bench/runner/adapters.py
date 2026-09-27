@@ -254,6 +254,8 @@ def _redis(logical_threads: int) -> dict[str, Any]:
         "argv": None,
         "server_argv": ["{artifact:redis-server}"],
         "client_argv": client,
+        "ping_argv": ["{artifact:redis-cli}", "ping"],
+        "shutdown_argv": ["{artifact:redis-cli}", "shutdown"],
         "parameter_roles": {
             "logical_threads_controls_argv": False,
             "logical_threads_stored_only": logical_threads,
