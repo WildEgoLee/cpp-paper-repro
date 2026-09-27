@@ -6,4 +6,6 @@ build/
 cmake-build-*/
 third_party/
 papers/*/results/runs/
-.DS_Store
+papers/*/bench/runs/
+__pycache__/
+*.pyc
