@@ -1,0 +1,52 @@
+{
+  "status": "frozen-not-run",
+  "paper_tag": "v1.0.0",
+  "separate_track_not_in_count": ["mimalloc-current"],
+  "allocators": ["glibc", "mimalloc-v1.0.0", "jemalloc", "tcmalloc"],
+  "threads": [1, 2, 4, 6, 8, 12],
+  "workloads": [
+    {
+      "id": "alloc-test",
+      "notes": "Pareto size distribution, including the multi-thread variant from the paper's suite"
+    },
+    {
+      "id": "larson",
+      "notes": "Cross-thread free / object migration. Paper text describes on the order of 100 threads in the published run; this matrix still sweeps 1..12 as the scaling curve, and the published thread count is an extra point, not a substitute."
+    },
+    {
+      "id": "xmalloc",
+      "notes": "Producer/consumer migration"
+    },
+    {
+      "id": "redis",
+      "notes": "Redis 5.0.3, 1_000_000 requests"
+    }
+  ],
+  "configurations": 96,
+  "warmup_runs": 3,
+  "measured_runs": 15,
+  "statistics": ["median", "p95"],
+  "metrics": [
+    "wall_time",
+    "throughput",
+    "rss",
+    "peak_rss",
+    "cycles",
+    "instructions",
+    "ipc",
+    "L1-dcache-load-misses",
+    "LLC-load-misses",
+    "cache-misses",
+    "context-switches"
+  ],
+  "excluded_from_round_1": [
+    "secure-mimalloc",
+    "hoard",
+    "snmalloc",
+    "rpmalloc",
+    "tbb",
+    "windows-heap",
+    "cache-scratch",
+    "spec"
+  ]
+}

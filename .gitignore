@@ -1,0 +1,9 @@
+papers/mimalloc-2019/harness/mechanism_probe
+*.o
+*.obj
+*.exe
+build/
+cmake-build-*/
+third_party/
+papers/*/results/runs/
+.DS_Store

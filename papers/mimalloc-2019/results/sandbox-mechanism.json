@@ -1,0 +1,52 @@
+{
+  "probe": "mimalloc-mechanism",
+  "disclaimer": "Not a reproduction of APLAS 2019 figures. Isolates free-list sharding, temporal cadence, thread_free, and false sharing on this host only.",
+  "paper": "Leijen, Zorn, de Moura. Mimalloc: Free List Sharding in Action. APLAS 2019.",
+  "historical_tag": "v1.0.0",
+  "hardware_concurrency": 2,
+  "checksum": 478781903,
+  "experiments": [
+    {
+      "id": "locality_walk",
+      "question": "Do temporally close allocations that stay inside a 64KiB page make the later pointer chase cheaper than a page-strided free list?",
+      "variants": [
+      {"name": "sharded_sequential_page", "unit": "ns_per_visit", "median": 8.068345, "samples": [7.951570, 8.068345, 8.330234, 8.236444, 8.110601, 7.379968, 7.457392]},
+      {"name": "strided_across_pages", "unit": "ns_per_visit", "median": 123.262744, "samples": [119.769281, 123.460029, 123.262744, 131.692684, 134.915769, 118.510149, 117.843323]}
+      ]
+    },
+    {
+      "id": "fast_path",
+      "question": "Isolated L1-resident free-list pop versus a bump pointer that wraps a 64KiB page. Not the paper's in-allocator bump experiment.",
+      "variants": [
+      {"name": "freelist_pop_ns", "unit": "ns_per_op", "median": 1.707177, "samples": [1.707463, 1.705105, 1.752645, 1.704642, 1.716513, 1.707177, 1.704730]},
+      {"name": "bump_pointer_ns", "unit": "ns_per_op", "median": 1.342694, "samples": [1.339584, 1.340390, 1.369060, 1.356136, 1.487449, 1.342694, 1.340861]},
+      {"name": "freelist_pop_cycles", "unit": "cycles_per_op", "median": 4.609642, "samples": [4.610262, 4.603969, 4.732257, 4.602702, 4.634702, 4.609642, 4.602933]},
+      {"name": "bump_pointer_cycles", "unit": "cycles_per_op", "median": 3.625285, "samples": [3.616889, 3.619077, 3.696475, 3.661576, 4.016125, 3.625285, 3.620345]}
+      ]
+    },
+    {
+      "id": "temporal_cadence",
+      "question": "If the same maintenance runs either on every pop or only when the page free list is empty, which alloc path is faster?",
+      "variants": [
+      {"name": "eager_every_alloc", "unit": "ns_per_alloc", "median": 10.928815, "samples": [10.928815, 10.913079, 11.385564, 11.087059, 11.259313, 10.888006, 10.888162]},
+      {"name": "slow_path_when_empty", "unit": "ns_per_alloc", "median": 4.525595, "samples": [4.558061, 4.494980, 4.543821, 4.800222, 4.525595, 4.502270, 4.474620]}
+      ]
+    },
+    {
+      "id": "cross_thread_free",
+      "question": "When each thread allocates locally and the peer frees, does a page-local atomic stack beat one global mutex?",
+      "variants": [
+      {"name": "global_mutex", "unit": "ns_per_alloc_or_free", "median": 88.534607, "samples": [66.870819, 91.880840, 90.782138, 86.415399, 84.476006, 93.733693, 88.534607]},
+      {"name": "page_atomic_thread_free", "unit": "ns_per_alloc_or_free", "median": 8.941170, "samples": [8.941170, 8.818590, 19.698455, 8.658269, 20.774102, 8.598058, 19.725844]}
+      ]
+    },
+    {
+      "id": "false_sharing",
+      "question": "Do two threads writing adjacent atomics lose to the same writes on separate cache lines?",
+      "variants": [
+      {"name": "same_cache_line", "unit": "ns_per_increment", "median": 35.511478, "samples": [36.234420, 37.517987, 36.741506, 35.010697, 34.335678, 32.731711, 35.511478]},
+      {"name": "split_cache_lines", "unit": "ns_per_increment", "median": 6.293254, "samples": [6.293254, 6.185990, 6.771801, 6.381929, 6.314143, 6.262297, 6.268853]}
+      ]
+    }
+  ]
+}
