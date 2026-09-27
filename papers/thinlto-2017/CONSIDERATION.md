@@ -1,28 +1,12 @@
-# ThinLTO，第二篇要先定什么
+# ThinLTO，第二篇
 
-这不是协议。没有 claim 编号，没有接受阈值，没有测量数字。mimalloc 的 round-1 还没在合格的 Linux 上跑过；这篇先只定边界，避免一上来就克隆 LLVM。
+协议还没写。已经能从论文正文锁住的事实在 [lock/environment-paper.json](lock/environment-paper.json)。这里只保留还没做完的顺序。
 
-## 为什么是它
+P0 还剩四步，按这个顺序，不跳：
 
-mimalloc 看的是运行时内存。ThinLTO 看的是另一件事：跨模块优化还在的时候，链接和增量构建能不能接近普通编译，而不是退回完整 LTO。两篇合在一起，才覆盖 C++ 工程里运行时和构建这两头。BOLT、Mesh 仍然排在后面。
+1. 继续找精确 revision 和脏文件脚本。论文自己没给 commit。找到了也只能标成外部 artifact 重建的 pin。
+2. 再锁 Clang 和 Chromium 的源码 revision。Ad Delivery 是私有负载，不替换。
+3. 再锁 gold、binutils、CMake、Ninja 和构建参数。
+4. 最后才写 claim 和矩阵。
 
-## 还不能做的事
-
-- 不在这个仓库里放 LLVM、clang 或一个完整的 bootstrap。
-- 不把记忆里的加速比写进文档。论文里的具体倍数等 P0 从 PDF 抄出来再冻结。
-- 不拿 macOS 或异构核机器当第一台测量机。和 mimalloc 一样，第一轮是 Linux。资源形态不同：这里卡的是核数、磁盘和链接并行度，不是那张 12 线程的 allocator 表。
-
-## P0 之前要锁的事实
-
-这些都还没锁。下面只是清单。
-
-| 要锁的东西 | 为什么不能猜 |
-| --- | --- |
-| 论文使用的 clang / LLVM 修订 | “现在的 clang 也支持 ThinLTO” 不等于复现 2017 的构建时间 |
-| 对照是普通编译、Full LTO，还是两者都有 | 少一个对照，扩展性结论就换了意思 |
-| workload | clang bootstrap 是这篇最常被提起的负载，但是不是论文主表，要对着 PDF 确认 |
-| 增量构建怎么定义脏文件 | 增量声明很容易被 ccache、ninja 缓存或没清掉的对象文件做成假象 |
-| 指标是 wall time、CPU time，还是峰值内存 | 和 mimalloc 一样，不能事后把两种统计揉成一个数 |
-| 机器的核数和存储 | 链接并行度会改变“更接近普通构建”这句话的含义 |
-
-锁完这些，才写 `PROTOCOL.md`。在那之前，这个目录保持 `queued`。
+增量实验的具体 path / function 仍然是 unresolved。2016-06-21 的 LLVM blog 写了 `DenseMap::grow()` 和 `InstCombineCalls.cpp` 里的 `visitCallInst()`。那是外部候选，不是论文原文，不能写成 Exact workload。

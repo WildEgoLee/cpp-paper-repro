@@ -1,0 +1,183 @@
+{
+  "schema": "cpp-paper-repro.environment/v1",
+  "identity": "cgo-2017-thinlto",
+  "status": "partial",
+  "locked_on": "2026-09-27",
+  "changes_claim_criteria": false,
+  "protocol": "not written",
+  "third_party_tree": "not cloned",
+  "primary_source": {
+    "title": "ThinLTO: Scalable and Incremental LTO",
+    "authors": ["Teresa Johnson", "Mehdi Amini", "Xinliang David Li"],
+    "venue": "CGO 2017",
+    "pages": "111-121",
+    "pdf_checked": "https://storage.googleapis.com/gweb-research2023-media/pubtools/4743.pdf",
+    "sections_read": ["3", "7", "8.1", "8.2", "8.3", "8.4"]
+  },
+  "compilers": {
+    "paper_statement": "clang/LLVM (v4.0), and GCC (v7.0) compilers built from recent (August 2016) upstream development sources",
+    "paper_gives_commit": false,
+    "exact_revision": "unresolved",
+    "future_pin_rule": "A later SVN or git revision is a reconstructed pin from an external artifact. It must not be labeled as a revision the paper stated.",
+    "rejected_pins": [
+      {
+        "id": "llvmorg-4.0.0",
+        "why": "A release tag. The paper says August 2016 upstream development sources, not the 4.0.0 release."
+      },
+      {
+        "id": "gcc-7.1.0",
+        "why": "A later release. The paper's v7.0 is the August 2016 development line, not a release tarball."
+      }
+    ]
+  },
+  "machines": {
+    "build_performance": {
+      "section": "8.2",
+      "paper_string": "16 core (32 logical) 2.9GHz Intel Xeon CPU ES-2690 with 64GB memory, running Linux and using the gold linker",
+      "preserve_paper_token": "ES-2690",
+      "do_not_rewrite_to": "E5-2690",
+      "linker": "gold",
+      "ram": "64GB",
+      "physical_cores": 16,
+      "logical_threads": 32,
+      "clock_ghz": 2.9
+    },
+    "runtime_spec": {
+      "section": "8.1",
+      "paper_string": "8-core 2.6GHz Intel Xeon E5-2689",
+      "configs": ["plain -O2", "LTO -O2", "ThinLTO -O2"],
+      "runs": "five runs, discard highest and lowest, average the remaining three",
+      "workload": "C/C++ SPEC cpu2006",
+      "not_the_build_host": true
+    },
+    "external_spellings_not_corrections": [
+      {
+        "source": "LLVM Developers' Meeting 2016-11 slides",
+        "url": "https://llvm.org/devmtg/2016-11/Slides/Amini-Johnson-ThinLTO.pdf",
+        "string": "E5-2690",
+        "role": "A later slide spells the build machine differently. It does not edit the paper."
+      }
+    ]
+  },
+  "workloads": {
+    "section_8_2": [
+      {
+        "id": "clang",
+        "paper": "The Clang compiler. Open source.",
+        "public_reproduction": "in scope once a source revision is locked",
+        "source_revision": "unresolved"
+      },
+      {
+        "id": "chromium",
+        "paper": "Chromium, an open-source web browser.",
+        "public_reproduction": "in scope once a source revision is locked",
+        "source_revision": "unresolved"
+      },
+      {
+        "id": "ad-delivery",
+        "paper": "An internal Google datacenter application that serves targeted ads.",
+        "public_reproduction": "unavailable",
+        "substitution": "forbidden"
+      }
+    ],
+    "section_8_4": {
+      "id": "ad-delivery-distributed",
+      "public_reproduction": "unavailable",
+      "note": "Bazel distributed build of the private application. Not part of a public matrix."
+    }
+  },
+  "experiments": {
+    "8.2_link_scaling": {
+      "compared": ["ThinLTO", "LLVM LTO", "GCC LTO"],
+      "clang_and_chromium_threads": [8, 16, 32],
+      "debug_axis": ["without debug", "with debug"],
+      "figure_5_and_6_labels": ["-O2 -g0", "-O2 -g2"],
+      "chromium_figure_3_threads": 32,
+      "gcc_serial_figure_4": "WPA configured with 32 partitions",
+      "llvm_lto_parallelism": "LLVM LTO optimizes in a single thread, and only the codegen is parallel"
+    },
+    "8.3_incremental_clang": {
+      "compared": ["LLVM LTO", "ThinLTO", "No-LTO"],
+      "jobs": "-j32",
+      "situations": ["clean", "frequent-header-change", "infrequent-source-change"],
+      "body_opt_level": "-O2",
+      "figure_caption_opt_level": "-O3",
+      "figure_label": "-O3 -g0"
+    }
+  },
+  "figure_text_conflicts": [
+    {
+      "where": "Section 8.3 prose versus Figure 7",
+      "prose": "comparing LTO, ThinLTO, and No-LTO (-O2)",
+      "caption": "No-LTO (-O3) with -j32",
+      "in_figure": "-O3 -g0",
+      "resolution": "none. Neither side is corrected."
+    },
+    {
+      "where": "Section 8.2 prose versus the LLVM Developers' Meeting 2016-11 slides",
+      "prose": "ES-2690",
+      "external": "E5-2690",
+      "resolution": "none. The paper token stays ES-2690."
+    }
+  ],
+  "memory_metric": {
+    "section": "8.2",
+    "paper": "peak difference between the resident set size and the shared memory as reported by the Linux kernel",
+    "rationale": "Shared memory accounts for read-only mmapped files that the kernel keeps in RAM. That memory is inside RSS but is not treated as pressure.",
+    "not_the_same_as": ["/usr/bin/time %M", "ru_maxrss"],
+    "note": "A later runner that records only peak RSS is a different measurement, not a reproduction of this metric."
+  },
+  "incremental_edits": {
+    "paper_defined": [
+      {
+        "id": "frequent-header-change",
+        "paper": "changes the implementation of a frequently referenced function in a widely used header, forcing many files to rebuild"
+      },
+      {
+        "id": "infrequent-source-change",
+        "paper": "changes the implementation of an infrequently called function in an implementation file"
+      }
+    ],
+    "exact_source_path": "unresolved",
+    "exact_function": "unresolved",
+    "external_candidates_not_the_paper_workload": [
+      {
+        "source": "LLVM blog, 2016-06-21",
+        "url": "https://blog.llvm.org/2016/06/thinlto-scalable-and-incremental-lto.html",
+        "frequent_header": "DenseMap::grow()",
+        "infrequent_source": "visitCallInst() in InstCombineCalls.cpp",
+        "if_used_later": "Directional operationalization, not an Exact paper workload, unless a script for this paper is found"
+      }
+    ]
+  },
+  "caches": {
+    "thinlto_backend_cache": {
+      "section": "3",
+      "part_of_the_mechanism": true,
+      "key": "input IR file hash combined with the thin-link analysis results",
+      "hit": "backend loads the cached native object",
+      "disable_during_incremental": false,
+      "paper_incremental_state": "warm build cache"
+    },
+    "extra_compiler_caches": {
+      "forbidden_during_incremental": ["ccache", "sccache"],
+      "why": "They are not the cache Section 3 describes. Turning them on, or turning the ThinLTO backend cache off, measures a different build."
+    }
+  },
+  "still_unresolved_before_claims": [
+    "exact clang/LLVM and GCC revisions, as reconstructed pins if an external artifact appears",
+    "Clang and Chromium source revisions",
+    "gold, binutils, CMake, and Ninja versions",
+    "the concrete header and function for the two incremental edits"
+  ],
+  "search_2026_09_27": {
+    "sought": ["paper benchmark script", "SVN or git revision", "dirty-file path in the paper"],
+    "also_read": [
+      "https://blog.llvm.org/2016/06/thinlto-scalable-and-incremental-lto.html",
+      "https://llvm.org/devmtg/2016-11/Slides/Amini-Johnson-ThinLTO.pdf"
+    ],
+    "paper_script_found": false,
+    "paper_revision_found": false,
+    "paper_dirty_path_found": false
+  }
+}
