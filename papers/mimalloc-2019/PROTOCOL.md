@@ -2,7 +2,9 @@
 
 状态：`protocol-frozen`。冻结日期以本文件进入仓库的提交为准。下面的判据在跑完之前不再改写。
 
-论文环境以 PDF 的实验设置表为准。工作笔记里出现过的机器是：AMD EPYC（16 核一类的配置，Ubuntu 18.04，glibc 2.27，GCC 7.x）以及 Intel Xeon W-2123。**开跑之前对照 PDF 把型号、核数、内存和编译器版本抄进 `results/` 的机器说明。** 不要凭笔记填 Exact 档。
+勘误不改判据，只补验收表漏掉的 C4，以及 96 组能关闭哪些 claim：[ERRATA.md](ERRATA.md)。论文机器、分配器版本和 mimalloc-bench 提交钉在 [results/environment-paper.json](results/environment-paper.json)。Exact 档只认那份锁定。
+
+论文 §4.3 是 EC2 `r5a.4xlarge`，16 核 AMD EPYC 7000、2.5 GHz、128 GB ECC、Ubuntu 18.04.1、LibC 2.27、GCC 7.3.0。§4.4 是 HP Z4-G4，4 核 Xeon W-2123、3.6 GHz、16 GB ECC，同一套系统软件。图里嵌的「8 核 @2.7 GHz、GCC 7.4.0」和正文冲突，以正文为准，写在锁定文件的 `figure_label_conflicts`。
 
 ## 已经从论文公开文本核对过的事实
 
@@ -12,12 +14,14 @@
 - 软件页大约 **64KiB**（64 位），页内是同一个 size class。
 - 每个页三条链表：`free`、`local_free`、`thread_free`。跨线程只用原子操作，不拿全局锁。
 - temporal cadence：fast path 保持很短，维护放在必然会发生的 slow path 上。
-- 作者试过空页上的 bump pointer，为了少一个 fast-path 分支而没有采用。工作笔记里的「大约慢 2%」在对照 PDF 之前只记成待核对，不作为 Exact 目标。
+- 作者在 §2.2 试过空页上的 bump pointer，整个 benchmark 大约慢 2%，因为 fast path 上会多一个条件。这已经核对。它仍然不是第一轮的 Exact 目标：第一轮不构建这个变体。隔离探针里 bump 更快，不能拿来回答这句。
 - redis 使用 **Redis 5.0.3**，100 万次请求。公开文本写 mimalloc 在该测试上比 jemalloc 快 14%；摘要把相对 tcmalloc 和 jemalloc 的加速写成 7% 和 14%。
 - larsonN：每个线程分配并释放大量对象，同时留下一部分给别的线程释放。公开文本写大约 100 个线程，mimalloc 比 tcmalloc 和 jemalloc 快 **2.5 倍以上**，作者将其联系到跨线程对象迁移。
 - 论文同时报告相对时间和相对 peak RSS，并承认有 mimalloc 并不占优的 workload。RSS 失控算失败，不是「跑得快就行」。
 
-其他 allocator 的精确版本从论文评测节或与 `v1.0.0` 同时代的 mimalloc-bench 提交里抄。不要用后来 README 上的 jemalloc 5.2 / tcmalloc 版本冒充 2019 年的对照。
+第一轮只用 glibc、mimalloc `v1.0.0`、jemalloc `5.2.0`、Ubuntu 包 `libgoogle-perftools-dev 2.5-2.2ubuntu3`。论文里其余分配器（snmalloc `0b64536b`、rpmalloc 1.3.1、Hoard 3.13、SuperMalloc `709663fb`、TBB `2017~U7-8`、secure mimalloc）钉在同一份锁定里，但不进入这 96 组。
+
+2019-06-25 之后的 mimalloc-bench 脚本改去编译 `gperftools-2.7`。那不是论文里的 tcmalloc，锁定文件明确拒绝它。同期脚本当时 `git checkout dev`，也不是 tag `v1.0.0`；复现构建的是 tag。
 
 ## Claim
 

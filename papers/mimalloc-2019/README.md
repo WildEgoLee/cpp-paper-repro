@@ -45,9 +45,11 @@ mimalloc：
 
 | 路径 | 内容 |
 | --- | --- |
-| [PROTOCOL.md](PROTOCOL.md) | 冻结的 claim、96 组矩阵、ablation、验收判据 |
-| [harness/](harness) | 不依赖上游库的机制探针 |
-| [bench/matrix.json](bench/matrix.json) | 第一轮配置，状态是 `frozen-not-run` |
-| [results/](results) | 一次 2 线程机器上的机制探针结果，不是论文复现 |
+| [PROTOCOL.md](PROTOCOL.md) | 冻结的 claim。判据没有改 |
+| [ERRATA.md](ERRATA.md) | 验收表补上 C4；写明 96 组不能关闭 C3/C4 |
+| [results/environment-paper.json](results/environment-paper.json) | 论文机器、v1.0.0、jemalloc 5.2.0、Ubuntu tcmalloc 2.5-2.2ubuntu3、mimalloc-bench `874d1b83` |
+| [harness/](harness) | 不依赖上游库的机制探针。不再往这里加实验 |
+| [bench/matrix.json](bench/matrix.json) | 96 组，`frozen-not-run`。还没有 runner |
+| [results/](results) | 机制探针一次运行，加上上面的历史锁定 |
 
 对照实验要在 Linux 上跑。Windows（系统堆、MSVC `/MD`、clang-cl）是第二阶段的可移植性实验，不混进第一轮的 96 组里。

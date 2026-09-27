@@ -1,5 +1,23 @@
 {
   "status": "frozen-not-run",
+  "historical_lock": "../results/environment-paper.json",
+  "invocations": {
+    "configurations": 96,
+    "warmup_runs": 3,
+    "measured_runs": 15,
+    "total": 1728,
+    "excludes": [
+      "mimalloc-current",
+      "larson-100-threads",
+      "xmalloc-100-plus-100",
+      "ablation",
+      "cache-scratch"
+    ]
+  },
+  "preflight": {
+    "min_hardware_threads": 12,
+    "record": ["smt", "numa_nodes", "scaling_governor", "turbo"]
+  },
   "paper_tag": "v1.0.0",
   "separate_track_not_in_count": ["mimalloc-current"],
   "allocators": ["glibc", "mimalloc-v1.0.0", "jemalloc", "tcmalloc"],

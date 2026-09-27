@@ -2,6 +2,24 @@
 
 入库的文件必须自己说明身份。`runs/` 下面的原始多次输出不入库。
 
+## environment-paper.json
+
+身份：**APLAS / MSR-TR-2019-18 的历史锁定。不是一次运行结果。**
+
+正文机器是 EC2 `r5a.4xlarge`（16 核 EPYC 7000，2.5 GHz，128 GB，Ubuntu 18.04.1，LibC 2.27，GCC 7.3.0）和 HP Z4-G4（4 核 Xeon W-2123，3.6 GHz，16 GB，同一套系统软件）。图里嵌的「8 核 @2.7 GHz、GCC 7.4.0」以冲突项保留，不当成第二套官方机器。
+
+分配器钉的是论文写的那三个，不是后来脚本里的版本：
+
+| id | 锁定 |
+| --- | --- |
+| mi | tag `v1.0.0`，commit `1125271c2756ee1db1303918816fea35e08b3405` |
+| je | tag `5.2.0`，commit `b0b3e49a54ec29e32636f4577d9d5a896d67fd20` |
+| tc | Ubuntu 源码包 `google-perftools 2.5-2.2ubuntu3`，不是 git tag `gperftools-2.7` |
+
+mimalloc-bench 锁在 `874d1b837ebf590eca732bc916bc63b2c1ebffd4`（2019-06-20）。这一版 README 和论文 §4 一致，构建脚本仍安装 Ubuntu 的 tcmalloc 包。下一周的脚本改去编译 `gperftools-2.7`，锁定文件拒绝那个提交。这个提交里的脚本 checkout 的是 `dev`，不是 `v1.0.0`；复现构建以 tag 为准。
+
+正式 96 组还没跑。跑之前的机器要至少有 12 个硬件线程，并记下 SMT、NUMA、governor、turbo。下面那份 2 线程探针不够格。
+
 ## sandbox-mechanism.json
 
 身份：**机制探针，一次运行。不是 APLAS 2019 的复现。**
