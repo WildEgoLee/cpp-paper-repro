@@ -7,6 +7,8 @@
   "locked_on": "2026-09-27",
   "changes_claim_criteria": false,
   "protocol": "frozen",
+  "p1": "closed",
+  "p1_5": "not started",
   "protocol_file": "../PROTOCOL.md",
   "execution": "not allowed",
   "third_party_tree": "not cloned",
