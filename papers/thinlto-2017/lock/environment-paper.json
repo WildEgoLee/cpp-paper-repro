@@ -6,7 +6,9 @@
   "p0_artifact_reconstruction": "stopped",
   "locked_on": "2026-09-27",
   "changes_claim_criteria": false,
-  "protocol": "not written",
+  "protocol": "frozen",
+  "protocol_file": "../PROTOCOL.md",
+  "execution": "not allowed",
   "third_party_tree": "not cloned",
   "primary_source": {
     "title": "ThinLTO: Scalable and Incremental LTO",

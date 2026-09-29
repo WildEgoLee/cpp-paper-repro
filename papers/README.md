@@ -5,7 +5,7 @@
 | slug | 状态 | 说明 |
 | --- | --- | --- |
 | `mimalloc-2019` | protocol-frozen | 第一篇。机制探针已能编译。96 组对照还没跑 |
-| `thinlto-2017` | queued | 论文事实已锁定。源码 revision 检索结束，仍无 pin。协议未写 |
+| `thinlto-2017` | protocol-frozen | 第二篇。三条 claim 已冻结。还没有 checkout，也不许跑 |
 | `bolt-2019` | queued | 链接后的二进制布局。协议未写 |
 | `mesh-2019` | queued | 不能移动对象时的压缩。协议未写 |
 

@@ -1,11 +1,7 @@
 # ThinLTO，第二篇
 
-`P0-paper-facts` 已关闭。源码检索也停了：Clang 和 Chromium 的 `paper_source_revision` 都是 `unresolved-after-search`。没有 reconstructed pin，也没有挑一个同期 commit 当成 operationalization。协议仍然不写。
+考古已经停了。claim 和失败判据在 [PROTOCOL.md](PROTOCOL.md)，并且已经冻结。
 
-2016 年 11 月作者幻灯片里的 IR 规模和论文对得上：Clang 1,938 个 IR 文件、`-g0` 下 217 MB；Chromium 17,798 个文件、706 MB。构建图用的机器写成 E5-2690。幻灯片没有 SVN、DEPS 或 CMakeCache。增量那一页是另一台 2013 Mac Pro，不能拿来补 §8.3 的路径。
+P1.5 还没开始。真要跑 Directional 实验时，另写一把 operationalization 锁：公开 checkout、工具链和 build recipe，标明 `pin_class: operationalization`、`supports_exact: false`。那把锁不能改协议里的判据，也不能把 Exact 从 `not-testable-from-public-artifacts` 改成可测。
 
-Chromium 2016 年 8 月的公开参数是 full LTO。9 月的 `use_thin_lto` 和 ToT bot 是事后评估。12 月把 jobs 限到 8，也不是论文的 8/16/32。这些都不是 pin。
-
-gold、binutils、CMake、Ninja 的版本停在 `paper-unspecified`，不再搜。
-
-Exact 矩阵现在不可测。以后如果要做 Directional，必须另写一个 `pin_class: operationalization` 的 checkout，并标 `supports_exact: false`。那一步还没发生。
+在那之前：不克隆，不写 runner，不跑。
