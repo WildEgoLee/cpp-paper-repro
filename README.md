@@ -1,27 +1,31 @@
 # cpp-paper-repro
 
-C++ / native 系统论文的可复现性工作台。一篇论文一个目录。
+C++ / native 系统**架构学习实验室**。一篇论文一个目录。
 
-不把「我这台机器不是论文里的 +14%」写成不可复现。先冻结 claim，再分成三档记录：
+目标不是严谨复现论文数字，而是：
 
-| 档位 | 问题 |
-| --- | --- |
-| Exact | 数值是否接近论文 |
-| Directional | 排序和趋势是否一致 |
-| Mechanistic | 性能变化是否符合论文给出的机制 |
+```
+paper → 自己画架构 + 写 invariants → 设计接口 → 实现 toy model → 再读上游 → 对比 tradeoffs
+```
 
-2026 年的 CPU、内核、glibc、编译器和 allocator 都已经不是论文当年那一套。机制还在不在，和历史数字是否重合，是两件分开的事。方法说明见 [docs/method.md](docs/method.md)。
+每篇论文必须带来一种以前没有的 architecture primitive。
 
-## 系列
+## 三层
 
-| 目录 | 论文 | 状态 |
+1. **Mechanism implementation** — 把论文机制拆成可独立实现的数据结构与快慢路径。
+2. **System decomposition** — 把对象、ownership、VM/OS 边界分离清楚。
+3. **Engineering architecture** — 实验规格、adapter、执行计划、结果解析等可复用框架。
+
+## 系列（按架构层次）
+
+| 目录 | 论文 | 学习的架构 |
 | --- | --- | --- |
-| [papers/mimalloc-2019](papers/mimalloc-2019) | Mimalloc: Free List Sharding in Action, APLAS 2019 | 第一篇，协议已冻结，机制探针可编译 |
-| [papers/thinlto-2017](papers/thinlto-2017) | ThinLTO: Scalable and Incremental LTO, CGO 2017 | protocol-frozen |
-| [papers/bolt-2019](papers/bolt-2019) | BOLT: A Practical Binary Optimizer for Data Centers and Beyond, CGO 2019 | protocol-frozen，机制探针可运行 |
-| [papers/mesh-2019](papers/mesh-2019) | Mesh: Compacting Memory Management for C/C++ Applications, PLDI 2019 | protocol-frozen，增强机制探针可运行 |
+| [papers/thinlto-2017](papers/thinlto-2017) | ThinLTO, CGO 2017 | compiler summaries / incremental / caching |
+| [papers/bolt-2019](papers/bolt-2019) | BOLT, CGO 2019 | binary CFG / profile / layout |
+| [papers/mimalloc-2019](papers/mimalloc-2019) | Mimalloc, APLAS 2019 | ownership / sharding / fast-slow path |
+| [papers/mesh-2019](papers/mesh-2019) | Mesh, PLDI 2019 | VM remapping / fragmentation |
 
-范围只包括 C / C++ 工程体系（运行时、内存、编译、链接、二进制布局）。WhisperX 不属于这个仓库。
+覆盖：source → compiler → binary → runtime → virtual memory。
 
 ## 现在就能跑的探针
 
@@ -31,6 +35,8 @@ make -C papers/mesh-2019/harness && ./papers/mesh-2019/harness/mechanism_probe
 make -C papers/bolt-2019/harness && ./papers/bolt-2019/harness/mechanism_probe
 ```
 
-## 加一篇论文
+## 新增论文的标准
 
-复制 [papers/_template](papers/_template)。不要把结果写进别的论文目录，也不要在协议冻结之前填「已复现」。
+不为数量。每篇必须引入一种新的 architecture primitive（例如 LSM、work-stealing、RCU、io_uring、lock-free queue、data-oriented design）。
+
+复制 [papers/_template](papers/_template)，并必须先写 `notes/architecture.md`。
