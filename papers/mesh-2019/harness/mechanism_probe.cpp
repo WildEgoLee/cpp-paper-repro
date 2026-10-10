@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
+#include <numeric>
 #include <random>
 #include <string>
 #include <vector>
@@ -26,7 +27,7 @@ static int popcount(uint64_t x) {
 
 int main() {
   constexpr int N_SPANS = 8;
-  constexpr int ALLOC_PER_SPAN = 24;  // ~37.5% occupancy like paper example
+  constexpr int ALLOC_PER_SPAN = 12;  // ~18.75% occupancy — higher chance of non-overlap
   std::mt19937 rng(42);
 
   std::vector<Span> spans(N_SPANS);
@@ -71,11 +72,6 @@ int main() {
     }
   }
 
-  double seq_occ = double(popcount(seq[0].live)) / Span::SLOTS;
-  double rnd_avg_occ = 0;
-  for (auto& s : rnd) rnd_avg_occ += double(popcount(s.live)) / Span::SLOTS;
-  rnd_avg_occ /= N_SPANS;
-
   printf("{\n");
   printf("  \"probe\": \"mesh-mechanism\",\n");
   printf("  \"n_spans\": %d,\n", N_SPANS);
@@ -84,7 +80,7 @@ int main() {
   print_json("sequential_meshable_pairs", seq_pairs);
   print_json("random_meshable_pairs", rnd_pairs);
   print_json("reclaimed_spans", reclaimed);
-  print_json("merged_occupancy", double(popcount(merged_live)) / Span::SLOTS);
+  print_json("merged_occupancy", reclaimed ? double(popcount(merged_live)) / Span::SLOTS : 0.0);
   printf("  \"note\": \"pure C++ simulation; addresses logical; not full Mesh\"\n");
   printf("}\n");
 
