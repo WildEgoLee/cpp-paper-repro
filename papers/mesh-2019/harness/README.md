@@ -2,12 +2,13 @@
 
 Pure C++ mechanism probe. Does **not** link official Mesh.
 
-Isolates:
+Progressive fidelity:
 
-- Random vs sequential allocation inside fixed-size page spans
-- Detection of non-overlapping live objects (meshable pairs)
-- **Real virtual-memory meshing**: `memfd_create` + `mmap(MAP_FIXED|MAP_SHARED)` so both virtual addresses see the same physical content, then `fallocate(FALLOC_FL_PUNCH_HOLE)` to reclaim the unused physical page
-- Address stability (object VAs never change) and content identity after remap
+- Random vs sequential allocation → meshable pairs (SplitMesher-style bounded probing)
+- Real virtual-memory meshing: `memfd_create` + `mmap(MAP_FIXED|MAP_SHARED)` + `fallocate(PUNCH_HOLE)`
+- `mprotect(PROT_READ)` window on source during copy (concurrency safety sketch)
+- Multi-page spans, multiple meshes, RSS before/after via `getrusage`
+- Address stability + content identity after remap
 
 Build & run:
 
@@ -16,4 +17,4 @@ make -C papers/mesh-2019/harness
 ./papers/mesh-2019/harness/mechanism_probe
 ```
 
-Output: JSON to stdout. Requires Linux (memfd_create + fallocate punch hole). Not a full paper reproduction.
+Output: JSON. Linux only. Still a mechanism probe, not a full allocator or paper reproduction.
