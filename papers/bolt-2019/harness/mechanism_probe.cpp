@@ -4,6 +4,7 @@
 // Does not require llvm-bolt; demonstrates the layout effect with noinline functions
 // and synthetic profile knowledge.
 
+#include <algorithm>
 #include <chrono>
 #include <cstdint>
 #include <cstdio>
