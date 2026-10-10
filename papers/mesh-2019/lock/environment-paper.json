@@ -1,0 +1,76 @@
+{
+  "schema": "cpp-paper-repro.environment/v1",
+  "identity": "pldi-2019-mesh",
+  "status": "locked",
+  "locked_on": "2026-10-10",
+  "changes_claim_criteria": false,
+  "primary_source": {
+    "id": "arXiv:1902.04738",
+    "title": "Mesh: Compacting Memory Management for C/C++ Applications",
+    "url": "https://arxiv.org/pdf/1902.04738",
+    "conference": "PLDI 2019",
+    "sections": ["Evaluation", "Implementation"]
+  },
+  "machines": {
+    "authority": "prose in Evaluation section",
+    "primary": {
+      "role": "published evaluation",
+      "model": "MacBook Pro",
+      "cpu": "Intel Core i7-5600U",
+      "memory": "16 GiB",
+      "os": "Ubuntu Bionic (Linux 4.18)",
+      "libc": "glibc 2.26",
+      "compiler_mesh": "gcc 8 -O3 -flto",
+      "compiler_spec": "clang 4.0 -O2"
+    }
+  },
+  "allocators": [
+    {
+      "id": "mesh",
+      "paper": "official implementation circa 2019",
+      "repo": "https://github.com/plasma-umass/mesh",
+      "note": "Pin exact commit in later lock; paper does not name a tag"
+    },
+    {
+      "id": "jemalloc",
+      "paper": "3.6.0",
+      "used_as": "baseline for Redis / general comparison"
+    },
+    {
+      "id": "glibc",
+      "paper": "2.26 system allocator"
+    }
+  ],
+  "workloads": [
+    {
+      "id": "firefox",
+      "paper": "Speedometer 2.0; ~16% RSS reduction",
+      "round_1": false
+    },
+    {
+      "id": "redis",
+      "paper": "Redis 4.0.2; ~39% memory reduction vs jemalloc with active defrag",
+      "round_1": false
+    },
+    {
+      "id": "specint2006",
+      "paper": "modest ~2.4% geomean memory reduction, 0.7% runtime overhead",
+      "round_1": false
+    }
+  ],
+  "paper_measurement": {
+    "rss": "custom mstat utility polling RSS in a memory cgroup",
+    "override": "LD_PRELOAD",
+    "note": "Exact numbers are not round-1 targets. Directional and Mechanistic are."
+  },
+  "round_1": {
+    "status": "protocol-frozen-probe-only",
+    "focus": "pure C++ mechanism probe demonstrating randomization + real mmap meshing",
+    "not_included": ["full Firefox", "full Redis", "SPECint", "multi-thread high contention"]
+  },
+  "modern_differences": [
+    "2026 kernel / glibc / CPU vs 2019 Ubuntu Bionic + i7-5600U",
+    "THP, ASLR, and memfd behavior may differ slightly",
+    "Differences are recorded; they do not excuse failure of Directional or Mechanistic claims"
+  ]
+}
