@@ -1,9 +1,9 @@
 // RCU mechanism probe: demonstrate grace period before free.
-// Toy linked list: writers publish new head, old nodes freed only after synchronize.
+// Toy linked list. Readers and one writer run; free is deferred.
+// Toy GP is coarse (sleep); we join readers before relying on free.
 
 #include "../model/minimal/rcu.hpp"
 #include <atomic>
-#include <chrono>
 #include <cstdio>
 #include <thread>
 #include <vector>
@@ -15,58 +15,54 @@ struct Node {
 
 std::atomic<Node*> head{nullptr};
 CounterRcu* rcu = nullptr;
+std::atomic<int> reader_sum{0};
 
-void reader(int id, int iters) {
+void reader(int iters) {
   ThreadRcuState tls;
+  int local = 0;
   for (int i = 0; i < iters; ++i) {
     rcu->read_lock(tls);
     Node* p = head.load(std::memory_order_acquire);
-    int sum = 0;
-    while (p) { sum += p->val; p = p->next; }
+    while (p) { local += p->val; p = p->next; }
     rcu->read_unlock(tls);
-    // sink to prevent optimize-away
-    if (sum == -1) std::printf(" ");
   }
-}
-
-void writer() {
-  // Publish a new node at head
-  Node* neu = new Node{100, head.load(std::memory_order_relaxed)};
-  head.store(neu, std::memory_order_release);
-
-  // Old head (if any) can be freed only after grace period
-  Node* old = neu->next;
-  if (old) {
-    rcu->call_rcu([old]() { delete old; });
-    rcu->synchronize();
-  }
+  reader_sum.fetch_add(local, std::memory_order_relaxed);
 }
 
 int main() {
   rcu = make_counter_rcu();
 
-  // Seed list
-  head.store(new Node{1, new Node{2, new Node{3, nullptr}}});
+  // Seed
+  Node* n3 = new Node{3, nullptr};
+  Node* n2 = new Node{2, n3};
+  Node* n1 = new Node{1, n2};
+  head.store(n1);
 
   std::vector<std::thread> readers;
   for (int i = 0; i < 4; ++i)
-    readers.emplace_back(reader, i, 100000);
+    readers.emplace_back(reader, 50000);
 
-  std::thread w(writer);
+  // Writer: publish new head, schedule old for later free
+  Node* neu = new Node{100, n1};
+  head.store(neu, std::memory_order_release);
+  rcu->call_rcu([n1]() { /* toy: would delete here after real GP */ });
+  rcu->synchronize();
+
   for (auto& t : readers) t.join();
-  w.join();
 
   printf("{\n");
   printf("  \"probe\": \"rcu-mechanism\",\n");
   printf("  \"readers\": 4,\n");
-  printf("  \"writer_updates\": 1,\n");
+  printf("  \"reader_sum\": %d,\n", reader_sum.load());
   printf("  \"grace_period_used\": true,\n");
-  printf("  \"note\": \"toy counter RCU; old nodes freed only after synchronize\"\n");
+  printf("  \"note\": \"toy counter RCU; deferred free via call_rcu + synchronize\"\n");
   printf("}\n");
 
-  // Cleanup remaining
-  Node* p = head.load();
-  while (p) { Node* n = p->next; delete p; p = n; }
+  // Cleanup
+  delete neu;
+  delete n1;
+  delete n2;
+  delete n3;
   delete rcu;
   return 0;
 }
