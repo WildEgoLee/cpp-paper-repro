@@ -36,6 +36,7 @@ make -C papers/mimalloc-2019/harness && ./papers/mimalloc-2019/harness/mechanism
 make -C papers/mesh-2019/harness && ./papers/mesh-2019/harness/mechanism_probe
 make -C papers/bolt-2019/harness && ./papers/bolt-2019/harness/mechanism_probe
 make -C papers/rcu-2001/harness && ./papers/rcu-2001/harness/mechanism_probe
+make -C papers/lsm-1996/harness && ./papers/lsm-1996/harness/mechanism_probe
 ```
 
 ## 新增论文的标准
