@@ -1,5 +1,6 @@
 // Michael-Scott queue mechanism probe.
 // Multiple producers and consumers; verify all values are transferred.
+// Queue uses tagged pointers for ABA protection.
 
 #include "../model/minimal/ms_queue.hpp"
 #include <atomic>
@@ -45,7 +46,6 @@ int main() {
   for (auto& t : producers) t.join();
   for (auto& t : consumers) t.join();
 
-  // Expected sum of 0..N-1 where N = producers * per
   long long N = static_cast<long long>(kProducers) * kPerProducer;
   long long expected = (N - 1) * N / 2;
 
@@ -58,7 +58,8 @@ int main() {
   std::printf("  \"sum\": %lld,\n", sum.load());
   std::printf("  \"expected_sum\": %lld,\n", expected);
   std::printf("  \"correct\": %s,\n", (consumed.load() == N && sum.load() == expected) ? "true" : "false");
-  std::printf("  \"note\": \"toy MS queue; no ABA protection beyond single process\"\n");
+  std::printf("  \"aba_protection\": \"tagged-pointer (16-bit tag in high bits)\",\n");
+  std::printf("  \"note\": \"toy MS queue with tagged pointers; still no hazard-pointer reclamation\"\n");
   std::printf("}\n");
 
   return (consumed.load() == N && sum.load() == expected) ? 0 : 1;
