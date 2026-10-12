@@ -34,6 +34,7 @@ paper → 自己画架构 + 写 invariants → 设计接口 → 实现 toy model
 make -C papers/mimalloc-2019/harness && ./papers/mimalloc-2019/harness/mechanism_probe
 make -C papers/mesh-2019/harness && ./papers/mesh-2019/harness/mechanism_probe
 make -C papers/bolt-2019/harness && ./papers/bolt-2019/harness/mechanism_probe
+make -C papers/rcu-2001/harness && ./papers/rcu-2001/harness/mechanism_probe
 ```
 
 ## 新增论文的标准
