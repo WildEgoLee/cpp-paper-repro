@@ -1,19 +1,18 @@
 # io_uring-2019 harness
 
-Three probes:
+Probes:
 
-1. `mechanism_probe` — pure user-space simulated SQ/CQ rings.
-2. `real_uring_probe` — real Linux io_uring, NOP only.
-3. `real_uring_rw_probe` — real io_uring **file write + read**.
-   - `io_uring_setup` + mmap
-   - `IORING_OP_WRITE` then `IORING_OP_READ`
-   - verifies data round-trip
+1. `mechanism_probe` — pure user-space simulated SQ/CQ.
+2. `real_uring_probe` — real io_uring NOP.
+3. `real_uring_rw_probe` — real file write + read.
+4. `real_uring_batch_probe` — **batch SQEs + registered buffers**.
+   - `IORING_REGISTER_BUFFERS`
+   - `IORING_OP_READ_FIXED` (32 × 4 KiB)
+   - Compares wall time against traditional `pread`
 
 ```bash
 make -C papers/io-uring-2019/harness
-./papers/io-uring-2019/harness/mechanism_probe
-./papers/io-uring-2019/harness/real_uring_probe
-./papers/io-uring-2019/harness/real_uring_rw_probe
+./papers/io-uring-2019/harness/real_uring_batch_probe
 ```
 
-Real probes require a kernel with io_uring support.
+Requires Linux with io_uring.
