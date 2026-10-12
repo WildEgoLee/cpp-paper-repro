@@ -35,8 +35,9 @@ paper → 自己画架构 + 写 invariants → 设计接口 → 实现 toy model
 | [papers/stm](papers/stm) | STM | optimistic concurrency / read-write sets |
 | [papers/persistent](papers/persistent) | Persistent DS | path copying / structural sharing |
 | [papers/gen-gc](papers/gen-gc) | Generational GC | write barrier / nursery / promotion |
+| [papers/raft-2014](papers/raft-2014) | Raft, ATC 2014 | consensus / leader election / log replication |
 
-覆盖：source → compiler → binary → runtime → virtual memory → concurrency → storage → scheduling → async I/O → lock-free structures → data layout → message-passing → user-level scheduling → optimistic concurrency → immutability → generational collection。
+覆盖：source → compiler → binary → runtime → virtual memory → concurrency → storage → scheduling → async I/O → lock-free structures → data layout → message-passing → user-level scheduling → optimistic concurrency → immutability → generational collection → distributed consensus。
 
 ## 现在就能跑的探针
 
