@@ -17,7 +17,6 @@ public:
   std::optional<Value> get(const Key& k) const;
   bool empty() const { return data_.empty(); }
   size_t size() const { return data_.size(); }
-  // For flush
   const std::map<Key, Value>& data() const { return data_; }
 
 private:
@@ -28,7 +27,7 @@ private:
 struct SSTable {
   int id = 0;
   int level = 0;
-  std::map<Key, Value> data;   // already sorted
+  std::map<Key, Value> data;
   Key min_key, max_key;
 };
 
@@ -46,3 +45,7 @@ public:
 private:
   size_t threshold_;
 };
+
+// Toy DB (defined in .cpp)
+class ToyLSM;
+ToyLSM* make_toy_lsm(size_t mem_limit = 4);
