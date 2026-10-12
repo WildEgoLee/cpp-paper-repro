@@ -32,8 +32,9 @@ paper → 自己画架构 + 写 invariants → 设计接口 → 实现 toy model
 | [papers/dod-soa](papers/dod-soa) | Data-Oriented Design | SoA vs AoS / cache layout |
 | [papers/actor-1973](papers/actor-1973) | Actor Model, IJCAI 1973 | message-passing / private state |
 | [papers/fibers](papers/fibers) | Fibers | cooperative user-level multitasking |
+| [papers/stm](papers/stm) | STM | optimistic concurrency / read-write sets |
 
-覆盖：source → compiler → binary → runtime → virtual memory → concurrency → storage → scheduling → async I/O → lock-free structures → data layout → message-passing → user-level scheduling。
+覆盖：source → compiler → binary → runtime → virtual memory → concurrency → storage → scheduling → async I/O → lock-free structures → data layout → message-passing → user-level scheduling → optimistic concurrency。
 
 ## 现在就能跑的探针
 
