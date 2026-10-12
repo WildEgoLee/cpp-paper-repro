@@ -1,5 +1,5 @@
-// Minimal io_uring-style ring interfaces (user-space simulation).
-// No real kernel; demonstrates SQ/CQ head-tail protocol.
+// Minimal io_uring-style ring (user-space simulation).
+// SPSC ring demonstrating SQ/CQ head-tail protocol.
 
 #pragma once
 #include <atomic>
@@ -24,16 +24,31 @@ struct CQE {
 template<typename T>
 class Ring {
 public:
-  explicit Ring(size_t n);
+  explicit Ring(size_t n) : buf_(n), mask_(static_cast<uint32_t>(n - 1)) {
+    // n must be power of two for mask to work; we assume caller guarantees it
+  }
 
-  // Producer
-  bool try_push(const T& item);
-  void push(const T& item);          // may spin
+  bool try_push(const T& item) {
+    uint32_t t = tail_.load(std::memory_order_relaxed);
+    uint32_t h = head_.load(std::memory_order_acquire);
+    if (t - h >= buf_.size()) return false;  // full
+    buf_[t & mask_] = item;
+    tail_.store(t + 1, std::memory_order_release);
+    return true;
+  }
 
-  // Consumer
-  std::optional<T> try_pop();
+  std::optional<T> try_pop() {
+    uint32_t h = head_.load(std::memory_order_relaxed);
+    uint32_t t = tail_.load(std::memory_order_acquire);
+    if (h == t) return std::nullopt;  // empty
+    T item = buf_[h & mask_];
+    head_.store(h + 1, std::memory_order_release);
+    return item;
+  }
 
-  size_t size() const;
+  size_t size() const {
+    return tail_.load(std::memory_order_acquire) - head_.load(std::memory_order_acquire);
+  }
 
 private:
   std::vector<T> buf_;
