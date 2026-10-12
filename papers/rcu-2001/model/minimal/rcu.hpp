@@ -29,15 +29,14 @@ public:
   virtual void call_rcu(std::function<void()> cb) = 0;
 };
 
-// Simple counter-based toy (to be implemented)
+// Simple counter-based toy
 class CounterRcu : public RcuDomain {
 public:
   void read_lock(ThreadRcuState& tls) override;
   void read_unlock(ThreadRcuState& tls) override;
   void synchronize() override;
   void call_rcu(std::function<void()> cb) override;
-
-private:
-  std::atomic<uint64_t> gp_{0};
-  // pending callbacks, etc.
 };
+
+// Factory
+CounterRcu* make_counter_rcu();
