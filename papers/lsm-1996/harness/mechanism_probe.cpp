@@ -2,25 +2,14 @@
 
 #include "../model/minimal/lsm.hpp"
 #include <cstdio>
-#include <string>
-
-// Forward (implemented in lsm.cpp)
-class ToyLSM {
-public:
-  void put(const std::string& k, const std::string& v);
-  std::optional<std::string> get(const std::string& k) const;
-  void flush();
-  size_t l0_count() const;
-  size_t mem_size() const;
-};
 
 int main() {
   ToyLSM* db = make_toy_lsm(3);  // flush every 3 puts
 
   db->put("a", "1");
   db->put("b", "2");
-  db->put("c", "3");          // triggers flush
-  db->put("b", "20");         // newer version in new memtable
+  db->put("c", "3");          // triggers flush → L0
+  db->put("b", "20");         // newer version stays in memtable
   db->put("d", "4");
 
   auto ga = db->get("a");
@@ -39,9 +28,9 @@ int main() {
   printf("  \"get_d\": \"%s\",\n", gd ? gd->c_str() : "null");
   printf("  \"get_missing\": \"%s\",\n", ge ? ge->c_str() : "null");
   printf("  \"newest_first\": true,\n");
-  printf("  \"note\": \"in-memory toy LSM; flush to simulated SSTable, no real disk\"\n");
+  printf("  \"note\": \"in-memory toy LSM; flush to simulated SSTable\"\n");
   printf("}\n");
 
   delete db;
-  return (ga && *ga=="1" && gb && *gb=="20" && gc && *gc=="3") ? 0 : 1;
+  return (ga && *ga=="1" && gb && *gb=="20" && gc && *gc=="3" && gd && *gd=="4" && !ge) ? 0 : 1;
 }
