@@ -31,8 +31,9 @@ paper → 自己画架构 + 写 invariants → 设计接口 → 实现 toy model
 | [papers/ms-queue-1996](papers/ms-queue-1996) | MS Queue, PODC 1996 | lock-free FIFO / CAS / dummy node |
 | [papers/dod-soa](papers/dod-soa) | Data-Oriented Design | SoA vs AoS / cache layout |
 | [papers/actor-1973](papers/actor-1973) | Actor Model, IJCAI 1973 | message-passing / private state |
+| [papers/fibers](papers/fibers) | Fibers | cooperative user-level multitasking |
 
-覆盖：source → compiler → binary → runtime → virtual memory → concurrency → storage → scheduling → async I/O → lock-free structures → data layout → message-passing。
+覆盖：source → compiler → binary → runtime → virtual memory → concurrency → storage → scheduling → async I/O → lock-free structures → data layout → message-passing → user-level scheduling。
 
 ## 现在就能跑的探针
 
