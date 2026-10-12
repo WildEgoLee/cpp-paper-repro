@@ -27,8 +27,9 @@ paper → 自己画架构 + 写 invariants → 设计接口 → 实现 toy model
 | [papers/rcu-2001](papers/rcu-2001) | RCU, OLS 2001 | deferred reclamation / grace periods |
 | [papers/lsm-1996](papers/lsm-1996) | LSM-tree, 1996 | memtable / SSTable / leveled compaction |
 | [papers/work-stealing-1994](papers/work-stealing-1994) | Work-Stealing, FOCS 1994 | per-worker deque / steal / work-first |
+| [papers/io-uring-2019](papers/io-uring-2019) | io_uring, 2019 | SQ/CQ shared rings / async I/O |
 
-覆盖：source → compiler → binary → runtime → virtual memory → concurrency → storage → scheduling。
+覆盖：source → compiler → binary → runtime → virtual memory → concurrency → storage → scheduling → async I/O。
 
 ## 现在就能跑的探针
 
@@ -42,6 +43,6 @@ make -C papers/lsm-1996/harness && ./papers/lsm-1996/harness/mechanism_probe
 
 ## 新增论文的标准
 
-不为数量。每篇必须引入一种新的 architecture primitive（例如 io_uring、lock-free queue、data-oriented design）。
+不为数量。每篇必须引入一种新的 architecture primitive（例如 lock-free queue、data-oriented design）。
 
 复制 [papers/_template](papers/_template)，并必须先写 `notes/architecture.md`。
