@@ -44,6 +44,7 @@ make -C papers/rcu-2001/harness && ./papers/rcu-2001/harness/mechanism_probe
 make -C papers/lsm-1996/harness && ./papers/lsm-1996/harness/mechanism_probe
 make -C papers/io-uring-2019/harness && ./papers/io-uring-2019/harness/mechanism_probe
 make -C papers/ms-queue-1996/harness && ./papers/ms-queue-1996/harness/mechanism_probe
+make -C papers/actor-1973/harness && ./papers/actor-1973/harness/mechanism_probe
 ```
 
 ## 新增论文的标准
