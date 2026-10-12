@@ -38,8 +38,9 @@ paper → 自己画架构 + 写 invariants → 设计接口 → 实现 toy model
 | [papers/raft-2014](papers/raft-2014) | Raft, ATC 2014 | consensus / leader election / log replication |
 | [papers/simd](papers/simd) | SIMD | data-parallel / vector registers |
 | [papers/cow](papers/cow) | Copy-on-Write | delayed copy / shared read-only |
+| [papers/ebr](papers/ebr) | EBR | epoch-based reclamation |
 
-覆盖：source → compiler → binary → runtime → virtual memory → concurrency → storage → scheduling → async I/O → lock-free structures → data layout → message-passing → user-level scheduling → optimistic concurrency → immutability → generational collection → distributed consensus → data parallelism → delayed copy。
+覆盖：source → compiler → binary → runtime → virtual memory → concurrency → storage → scheduling → async I/O → lock-free structures → data layout → message-passing → user-level scheduling → optimistic concurrency → immutability → generational collection → distributed consensus → data parallelism → delayed copy → epoch reclamation。
 
 ## 现在就能跑的探针
 
