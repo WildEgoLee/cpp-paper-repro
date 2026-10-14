@@ -62,6 +62,7 @@ make -C papers/gen-gc/harness && ./papers/gen-gc/harness/mechanism_probe
 make -C papers/cow/harness && ./papers/cow/harness/mechanism_probe
 make -C papers/ebr/harness && ./papers/ebr/harness/mechanism_probe
 make -C papers/crdt/harness && ./papers/crdt/harness/mechanism_probe
+make -C papers/bptree/harness && ./papers/bptree/harness/mechanism_probe
 ```
 
 ## 新增论文的标准
