@@ -66,6 +66,7 @@ make -C papers/ebr/harness && ./papers/ebr/harness/mechanism_probe
 make -C papers/crdt/harness && ./papers/crdt/harness/mechanism_probe
 make -C papers/bptree/harness && ./papers/bptree/harness/mechanism_probe
 make -C papers/skiplist/harness && ./papers/skiplist/harness/mechanism_probe
+make -C papers/bloom/harness && ./papers/bloom/harness/mechanism_probe
 ```
 
 ## 新增论文的标准
