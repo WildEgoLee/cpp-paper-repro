@@ -1,7 +1,7 @@
 // Minimal Epoch-based Reclamation.
 // Single-thread toy that demonstrates the two-epoch rule.
-// A node retired in epoch e is freeable only after the global epoch
-// has advanced to e+2.
+// A node retired while the thread observed epoch e is freeable
+// only after the global epoch has advanced to at least e+2.
 
 #pragma once
 #include <cstdint>
@@ -20,43 +20,41 @@ public:
   }
 
   void retire(void* node) {
-    // Retire into the limbo list of the epoch the thread observed.
+    // Record the epoch the thread observed when it entered.
     uint64_t e = announced_;
     limbo_[e % 3].push_back({node, e});
   }
 
-  // Advance if the (single) thread has observed the current epoch
-  // or is not in a critical section.
   bool try_advance() {
-    if (in_critical_ && announced_ < global_epoch_) return false;
+    // Single-thread toy: always allow advance when not stuck behind.
+    if (in_critical_ && announced_ + 1 < global_epoch_) return false;
     ++global_epoch_;
-    // Free anything retired in epoch (global - 2).
-    uint64_t freeable = global_epoch_ >= 2 ? global_epoch_ - 2 : ~0ull;
-    reclaim(freeable);
+    // Anything retired in epoch <= (global_epoch_ - 2) is freeable.
+    if (global_epoch_ >= 2) {
+      reclaim_up_to(global_epoch_ - 2);
+    }
     return true;
   }
 
   uint64_t global_epoch() const { return global_epoch_; }
   uint64_t announced() const { return announced_; }
 
-  // How many nodes are still in limbo (not yet freeable).
   size_t limbo_count() const {
     size_t n = 0;
     for (auto& b : limbo_) n += b.size();
     return n;
   }
 
-  // How many have been reclaimed.
   size_t reclaimed_count() const { return reclaimed_; }
 
 private:
   struct Item { void* ptr; uint64_t epoch; };
 
-  void reclaim(uint64_t freeable_epoch) {
+  void reclaim_up_to(uint64_t max_epoch) {
     for (auto& bag : limbo_) {
       auto it = std::remove_if(bag.begin(), bag.end(),
         [&](const Item& it) {
-          if (it.epoch <= freeable_epoch) {
+          if (it.epoch <= max_epoch) {
             ++reclaimed_;
             return true;
           }
