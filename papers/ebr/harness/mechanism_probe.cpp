@@ -2,8 +2,8 @@
 //
 // Timeline (single-thread toy):
 //   global = 0: enter → retire A (observed 0) → exit
-//   advance → global = 1   A still in limbo (could still be seen by a thread in epoch 0)
-//   advance → global = 2   A freeable (every thread has observed at least epoch 1)
+//   advance → global = 1   A still in limbo
+//   advance → global = 2   A freeable
 
 #include "../model/minimal/ebr.hpp"
 #include <cstdio>
