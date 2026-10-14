@@ -42,8 +42,9 @@ paper → 自己画架构 + 写 invariants → 设计接口 → 实现 toy model
 | [papers/crdt](papers/crdt) | CRDT | conflict-free replication |
 | [papers/bptree](papers/bptree) | B+ Tree | ordered index / leaf chain |
 | [papers/skiplist](papers/skiplist) | Skip List | probabilistic balancing |
+| [papers/bloom](papers/bloom) | Bloom Filter | probabilistic membership |
 
-覆盖：source → compiler → binary → runtime → virtual memory → concurrency → storage → scheduling → async I/O → lock-free structures → data layout → message-passing → user-level scheduling → optimistic concurrency → immutability → generational collection → distributed consensus → data parallelism → delayed copy → epoch reclamation → conflict-free replication → ordered index → probabilistic balancing。
+覆盖：source → compiler → binary → runtime → virtual memory → concurrency → storage → scheduling → async I/O → lock-free structures → data layout → message-passing → user-level scheduling → optimistic concurrency → immutability → generational collection → distributed consensus → data parallelism → delayed copy → epoch reclamation → conflict-free replication → ordered index → probabilistic balancing → probabilistic membership。
 
 ## 现在就能跑的探针
 
