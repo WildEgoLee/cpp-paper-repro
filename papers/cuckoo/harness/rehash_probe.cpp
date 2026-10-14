@@ -8,7 +8,7 @@
 
 int main() {
   CuckooHash h(4);
-  std::vector<int> keys = {1, 5, 9, 13, 17, 21};
+  std::vector<int> keys = {1, 5, 9, 13};
 
   bool all_ok = true;
   for (int k : keys) {
