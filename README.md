@@ -72,6 +72,7 @@ make -C papers/skiplist/harness && ./papers/skiplist/harness/mechanism_probe
 make -C papers/bloom/harness && ./papers/bloom/harness/mechanism_probe
 make -C papers/cuckoo/harness && ./papers/cuckoo/harness/mechanism_probe
 make -C papers/robinhood/harness && ./papers/robinhood/harness/mechanism_probe
+make -C papers/swiss/harness && ./papers/swiss/harness/mechanism_probe
 ```
 
 ## 新增论文的标准
