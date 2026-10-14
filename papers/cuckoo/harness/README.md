@@ -1,14 +1,21 @@
 # Cuckoo Hashing harness
 
-Minimal two-table cuckoo hash.
+## Basic kick-out
 
-- Lookup checks at most two slots
-- Insert may kick the previous occupant to its other location
-- Cycle is detected by a kick limit (rehash not implemented)
+`mechanism_probe` inserts two keys that share a slot. The second kicks the first to its other table. Lookup still finds both.
 
 ```bash
-make -C papers/cuckoo/harness
+make -C papers/cuckoo/harness mechanism_probe
 ./papers/cuckoo/harness/mechanism_probe
 ```
 
-Toy only; demonstrates the kick-out primitive and worst-case constant lookup.
+## Rehash on cycle
+
+`rehash_probe` inserts into a tiny table until the kick limit is hit. The table is rebuilt at double capacity and all keys remain findable.
+
+```bash
+make -C papers/cuckoo/harness rehash_probe
+./papers/cuckoo/harness/rehash_probe
+```
+
+Toys only. They demonstrate the kick-out primitive and the rebuild path that real implementations need when a cycle appears.
