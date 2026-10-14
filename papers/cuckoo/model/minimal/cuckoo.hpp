@@ -1,6 +1,7 @@
 // Minimal Cuckoo Hashing.
 // Two logical tables, two hash functions, kick-out on insert.
 // Lookup is worst-case two probes.
+// Hash functions are deliberately simple so collisions (and kicks) happen.
 
 #pragma once
 #include <vector>
@@ -22,14 +23,13 @@ public:
         slot = x;
         return true;
       }
-      // Kick out the occupant.
       int kicked = *slot;
       slot = x;
       x = kicked;
       table = 1 - table;
       ++kicks_;
     }
-    return false;   // cycle; rehash would be needed
+    return false;
   }
 
   bool contains(int key) const {
@@ -42,12 +42,9 @@ public:
   size_t kicks() const { return kicks_; }
 
 private:
-  size_t h1(int key) const {
-    return static_cast<unsigned>(key) * 2654435761u % t1_.size();
-  }
-  size_t h2(int key) const {
-    return static_cast<unsigned>(key) * 0x9e3779b9u % t2_.size();
-  }
+  // Simple modular hashes so small keys collide.
+  size_t h1(int key) const { return static_cast<unsigned>(key) % t1_.size(); }
+  size_t h2(int key) const { return static_cast<unsigned>(key * 3 + 1) % t2_.size(); }
 
   std::vector<std::optional<int>> t1_, t2_;
   size_t kicks_;
