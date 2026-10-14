@@ -16,21 +16,27 @@ public:
       if (c && c->key == key) { ++c->count; return; }
     }
     // Find empty or minimum.
-    auto* target = &counters_[0];
-    for (auto& c : counters_) {
-      if (!c) { target = &c; break; }
-      if (c->count < target->count) target = &c;
+    size_t idx = 0;
+    bool found_empty = false;
+    int min_count = 0;
+    for (size_t i = 0; i < counters_.size(); ++i) {
+      if (!counters_[i]) { idx = i; found_empty = true; break; }
+      if (i == 0 || counters_[i]->count < min_count) {
+        min_count = counters_[i]->count;
+        idx = i;
+      }
     }
-    int base = target-> ? target->count : 0;
-    *target = Slot{key, base + 1};
+    int base = found_empty ? 0 : min_count;
+    counters_[idx] = Slot{key, base + 1};
   }
 
   int estimate(int key) const {
     for (auto& c : counters_)
       if (c && c->key == key) return c->count;
     int m = 0;
+    bool any = false;
     for (auto& c : counters_)
-      if (c && (m == 0 || c->count < m)) m = c->count;
+      if (c && (!any || c->count < m)) { m = c->count; any = true; }
     return m;
   }
 
