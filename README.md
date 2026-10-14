@@ -46,8 +46,9 @@ paper → 自己画架构 + 写 invariants → 设计接口 → 实现 toy model
 | [papers/cuckoo](papers/cuckoo) | Cuckoo Hashing | kick-out / worst-case O(1) lookup |
 | [papers/robinhood](papers/robinhood) | Robin Hood Hashing | variance-bounded probing |
 | [papers/swiss](papers/swiss) | Swiss Table | control bytes / group probing |
+| [papers/hyperloglog](papers/hyperloglog) | HyperLogLog | cardinality estimation |
 
-覆盖：source → compiler → binary → runtime → virtual memory → concurrency → storage → scheduling → async I/O → lock-free structures → data layout → message-passing → user-level scheduling → optimistic concurrency → immutability → generational collection → distributed consensus → data parallelism → delayed copy → epoch reclamation → conflict-free replication → ordered index → probabilistic balancing → probabilistic membership → kick-out hashing → variance-bounded probing → control-byte group probing。
+覆盖：source → compiler → binary → runtime → virtual memory → concurrency → storage → scheduling → async I/O → lock-free structures → data layout → message-passing → user-level scheduling → optimistic concurrency → immutability → generational collection → distributed consensus → data parallelism → delayed copy → epoch reclamation → conflict-free replication → ordered index → probabilistic balancing → probabilistic membership → kick-out hashing → variance-bounded probing → control-byte group probing → cardinality estimation。
 
 ## 现在就能跑的探针
 
