@@ -1,7 +1,6 @@
 // Cuckoo Hashing with rehash.
 // Two tables, two hash functions, kick-out on insert.
-// If the kick chain exceeds a limit, rebuild with larger tables
-// and retry any keys that did not fit.
+// If the kick chain exceeds a limit, rebuild with larger tables.
 
 #pragma once
 #include <vector>
@@ -15,7 +14,7 @@ public:
 
   bool insert(int key) {
     if (contains(key)) return true;
-    for (int attempt = 0; attempt < 6; ++attempt) {
+    for (int attempt = 0; attempt < 8; ++attempt) {
       if (try_insert(key)) return true;
       rehash();
     }
@@ -37,7 +36,7 @@ private:
   bool try_insert(int key) {
     int x = key;
     int table = 0;
-    for (int i = 0; i < 32; ++i) {
+    for (int i = 0; i < 64; ++i) {
       auto& slot = (table == 0) ? t1_[h1(x)] : t2_[h2(x)];
       if (!slot) {
         slot = x;
@@ -53,30 +52,18 @@ private:
   }
 
   void rehash() {
-    std::vector<int> pending;
-    for (auto& s : t1_) if (s) pending.push_back(*s);
-    for (auto& s : t2_) if (s) pending.push_back(*s);
-    size_t n = t1_.size() * 4;
+    std::vector<int> keys;
+    for (auto& s : t1_) if (s) keys.push_back(*s);
+    for (auto& s : t2_) if (s) keys.push_back(*s);
+    size_t n = std::max(t1_.size() * 4, keys.size() * 8 + 8);
     t1_.assign(n, std::nullopt);
     t2_.assign(n, std::nullopt);
     ++rehashes_;
-    // Retry until all fit or we give up.
-    for (int pass = 0; pass < 4 && !pending.empty(); ++pass) {
-      std::vector<int> still;
-      for (int k : pending)
-        if (!try_insert(k)) still.push_back(k);
-      pending.swap(still);
-      if (!pending.empty() && pass < 3) {
-        // Grow again.
-        size_t nn = t1_.size() * 2;
-        t1_.assign(nn, std::nullopt);
-        t2_.assign(nn, std::nullopt);
-      }
-    }
+    for (int k : keys) try_insert(k);
   }
 
   size_t h1(int key) const { return static_cast<unsigned>(key) % t1_.size(); }
-  size_t h2(int key) const { return static_cast<unsigned>(key * 7 + 3) % t2_.size(); }
+  size_t h2(int key) const { return static_cast<unsigned>(key * 13 + 7) % t2_.size(); }
 
   std::vector<std::optional<int>> t1_, t2_;
   size_t kicks_;
