@@ -27,11 +27,16 @@ public:
 
 private:
   unsigned hash(int key) const {
-    return static_cast<unsigned>(key) * 2654435761u;
+    unsigned h = static_cast<unsigned>(key) * 2654435761u;
+    h ^= h >> 16;
+    return h;
   }
   int leading_zeros(unsigned h) const {
     int z = 0;
-    while ((h & 1) == 0 && z < 16) { ++z; h >>= 1; }
+    for (int i = 31; i >= 0; --i) {
+      if (h & (1u << i)) break;
+      ++z;
+    }
     return z;
   }
 
