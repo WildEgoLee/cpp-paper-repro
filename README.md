@@ -54,8 +54,9 @@ paper → 自己画架构 + 写 invariants → 设计接口 → 实现 toy model
 | [papers/minhash](papers/minhash) | MinHash | set similarity / Jaccard |
 | [papers/lsh](papers/lsh) | LSH | banding / candidate generation |
 | [papers/cuckoofilter](papers/cuckoofilter) | Cuckoo Filter | fingerprint / deletion |
+| [papers/quotient](papers/quotient) | Quotient Filter | quotient / remainder / run |
 
-覆盖：source → compiler → binary → runtime → virtual memory → concurrency → storage → scheduling → async I/O → lock-free structures → data layout → message-passing → user-level scheduling → optimistic concurrency → immutability → generational collection → distributed consensus → data parallelism → delayed copy → epoch reclamation → conflict-free replication → ordered index → probabilistic balancing → probabilistic membership → kick-out hashing → variance-bounded probing → control-byte group probing → cardinality estimation → frequency estimation → heavy hitters → frequent items → unbiased frequency → set similarity → candidate generation → fingerprint membership。
+覆盖：source → compiler → binary → runtime → virtual memory → concurrency → storage → scheduling → async I/O → lock-free structures → data layout → message-passing → user-level scheduling → optimistic concurrency → immutability → generational collection → distributed consensus → data parallelism → delayed copy → epoch reclamation → conflict-free replication → ordered index → probabilistic balancing → probabilistic membership → kick-out hashing → variance-bounded probing → control-byte group probing → cardinality estimation → frequency estimation → heavy hitters → frequent items → unbiased frequency → set similarity → candidate generation → fingerprint membership → quotient membership。
 
 ## 现在就能跑的探针
 
