@@ -1,7 +1,7 @@
 // Cuckoo Hashing with rehash.
 // Two tables, two hash functions, kick-out on insert.
-// If the kick chain exceeds a limit, rebuild with larger tables.
-// Rehash places keys only into empty correct hash slots.
+// All successfully inserted keys are tracked so rehash can rebuild
+// from a consistent set even if a kick chain left the tables dirty.
 
 #pragma once
 #include <vector>
@@ -16,10 +16,12 @@ public:
 
   bool insert(int key) {
     if (contains(key)) return true;
+    all_keys_.push_back(key);
     for (int attempt = 0; attempt < 8; ++attempt) {
       if (try_insert(key)) return true;
       rehash();
     }
+    all_keys_.pop_back();
     return false;
   }
 
@@ -54,18 +56,13 @@ private:
   }
 
   void rehash() {
-    std::vector<int> keys;
-    for (auto& s : t1_) if (s) keys.push_back(*s);
-    for (auto& s : t2_) if (s) keys.push_back(*s);
-    size_t n = std::max(t1_.size() * 4, keys.size() * 32 + 32);
+    size_t n = std::max(t1_.size() * 4, all_keys_.size() * 32 + 32);
     t1_.assign(n, std::nullopt);
     t2_.assign(n, std::nullopt);
     ++rehashes_;
-    // Place only into empty correct slots. With large n both are free.
-    for (int k : keys) {
+    for (int k : all_keys_) {
       if (!t1_[h1(k)]) t1_[h1(k)] = k;
       else if (!t2_[h2(k)]) t2_[h2(k)] = k;
-      // else: both taken; drop (should not happen with large n)
     }
   }
 
@@ -73,6 +70,7 @@ private:
   size_t h2(int key) const { return static_cast<unsigned>(key * 13 + 7) % t2_.size(); }
 
   std::vector<std::optional<int>> t1_, t2_;
+  std::vector<int> all_keys_;
   size_t kicks_;
   size_t rehashes_;
 };
