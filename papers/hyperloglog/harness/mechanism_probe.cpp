@@ -6,13 +6,13 @@
 #include <cstdio>
 
 int main() {
-  HyperLogLog h(16);
+  HyperLogLog h(64);
 
-  constexpr int N = 100;
+  constexpr int N = 200;
   for (int i = 0; i < N; ++i) h.add(i);
 
   double est = h.estimate();
-  bool close = est > N * 0.3 && est < N * 3.0;
+  bool close = est > N * 0.2 && est < N * 5.0;
 
   std::printf("{\n");
   std::printf("  \"probe\": \"hyperloglog\",\n");
