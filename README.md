@@ -82,6 +82,7 @@ make -C papers/hyperloglog/harness && ./papers/hyperloglog/harness/mechanism_pro
 make -C papers/countmin/harness && ./papers/countmin/harness/mechanism_probe
 make -C papers/spacesaving/harness && ./papers/spacesaving/harness/mechanism_probe
 make -C papers/misragries/harness && ./papers/misragries/harness/mechanism_probe
+make -C papers/countsketch/harness && ./papers/countsketch/harness/mechanism_probe
 ```
 
 ## 新增论文的标准
