@@ -5,6 +5,7 @@
 #include "../model/minimal/skiplist.hpp"
 #include <cstdio>
 #include <cstdlib>
+#include <initializer_list>
 
 int main() {
   std::srand(42);
