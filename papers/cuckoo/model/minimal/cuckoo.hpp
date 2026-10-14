@@ -14,11 +14,11 @@ public:
 
   bool insert(int key) {
     if (contains(key)) return true;
-    if (!try_insert(key)) {
+    for (int attempt = 0; attempt < 4; ++attempt) {
+      if (try_insert(key)) return true;
       rehash();
-      return try_insert(key);
     }
-    return true;
+    return false;
   }
 
   bool contains(int key) const {
@@ -36,7 +36,7 @@ private:
   bool try_insert(int key) {
     int x = key;
     int table = 0;
-    for (int i = 0; i < 16; ++i) {
+    for (int i = 0; i < 32; ++i) {
       auto& slot = (table == 0) ? t1_[h1(x)] : t2_[h2(x)];
       if (!slot) {
         slot = x;
@@ -52,18 +52,18 @@ private:
   }
 
   void rehash() {
-    auto old1 = std::move(t1_);
-    auto old2 = std::move(t2_);
-    size_t n = old1.size() * 2;
+    std::vector<int> keys;
+    for (auto& s : t1_) if (s) keys.push_back(*s);
+    for (auto& s : t2_) if (s) keys.push_back(*s);
+    size_t n = t1_.size() * 4;
     t1_.assign(n, std::nullopt);
     t2_.assign(n, std::nullopt);
     ++rehashes_;
-    for (auto& s : old1) if (s) try_insert(*s);
-    for (auto& s : old2) if (s) try_insert(*s);
+    for (int k : keys) try_insert(k);
   }
 
   size_t h1(int key) const { return static_cast<unsigned>(key) % t1_.size(); }
-  size_t h2(int key) const { return static_cast<unsigned>(key * 3 + 1) % t2_.size(); }
+  size_t h2(int key) const { return static_cast<unsigned>(key * 7 + 3) % t2_.size(); }
 
   std::vector<std::optional<int>> t1_, t2_;
   size_t kicks_;
