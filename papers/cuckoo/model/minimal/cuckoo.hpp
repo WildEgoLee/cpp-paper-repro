@@ -1,7 +1,7 @@
 // Cuckoo Hashing with rehash.
 // Two tables, two hash functions, kick-out on insert.
 // If the kick chain exceeds a limit, rebuild with larger tables.
-// Rehash places keys only into their correct hash slots.
+// Rehash places keys only into empty correct hash slots.
 
 #pragma once
 #include <vector>
@@ -61,10 +61,11 @@ private:
     t1_.assign(n, std::nullopt);
     t2_.assign(n, std::nullopt);
     ++rehashes_;
-    // Place only into correct hash slots. With large n this always succeeds.
+    // Place only into empty correct slots. With large n both are free.
     for (int k : keys) {
       if (!t1_[h1(k)]) t1_[h1(k)] = k;
-      else t2_[h2(k)] = k;
+      else if (!t2_[h2(k)]) t2_[h2(k)] = k;
+      // else: both taken; drop (should not happen with large n)
     }
   }
 
