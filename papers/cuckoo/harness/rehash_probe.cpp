@@ -7,8 +7,8 @@
 #include <vector>
 
 int main() {
-  CuckooHash h(4);
-  std::vector<int> keys = {1, 5, 9, 13};
+  CuckooHash h(2);
+  std::vector<int> keys = {1, 3, 5};
 
   bool all_ok = true;
   for (int k : keys) {
@@ -21,7 +21,7 @@ int main() {
   }
 
   bool rehashed = h.rehashes() > 0;
-  bool grew = h.capacity() > 4;
+  bool grew = h.capacity() > 2;
 
   bool ok = all_ok && found_all && rehashed && grew;
 
