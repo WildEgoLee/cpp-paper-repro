@@ -1,7 +1,11 @@
 // Minimal Epoch-based Reclamation.
-// Single-thread toy that demonstrates the two-epoch rule.
+// Single-thread toy that demonstrates the two-epoch rule
+// and the stall (unbounded limbo) limitation.
+//
 // A node retired while the thread observed epoch e is freeable
 // only after the global epoch has advanced to at least e+2.
+// While the thread remains in a critical section, advance is blocked
+// (toy approximation of "someone is still observing the old epoch").
 
 #pragma once
 #include <cstdint>
@@ -20,16 +24,15 @@ public:
   }
 
   void retire(void* node) {
-    // Record the epoch the thread observed when it entered.
     uint64_t e = announced_;
     limbo_[e % 3].push_back({node, e});
   }
 
   bool try_advance() {
-    // Single-thread toy: always allow advance when not stuck behind.
-    if (in_critical_ && announced_ + 1 < global_epoch_) return false;
+    // Toy: if we are still inside a critical section we have not
+    // observed a newer epoch, so we cannot advance.
+    if (in_critical_) return false;
     ++global_epoch_;
-    // Anything retired in epoch <= (global_epoch_ - 2) is freeable.
     if (global_epoch_ >= 2) {
       reclaim_up_to(global_epoch_ - 2);
     }
@@ -38,6 +41,7 @@ public:
 
   uint64_t global_epoch() const { return global_epoch_; }
   uint64_t announced() const { return announced_; }
+  bool in_critical() const { return in_critical_; }
 
   size_t limbo_count() const {
     size_t n = 0;
