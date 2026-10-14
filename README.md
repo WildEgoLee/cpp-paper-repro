@@ -52,8 +52,9 @@ paper → 自己画架构 + 写 invariants → 设计接口 → 实现 toy model
 | [papers/misragries](papers/misragries) | Misra-Gries | frequent items / decrement-all |
 | [papers/countsketch](papers/countsketch) | Count Sketch | unbiased frequency / sign hash |
 | [papers/minhash](papers/minhash) | MinHash | set similarity / Jaccard |
+| [papers/lsh](papers/lsh) | LSH | banding / candidate generation |
 
-覆盖：source → compiler → binary → runtime → virtual memory → concurrency → storage → scheduling → async I/O → lock-free structures → data layout → message-passing → user-level scheduling → optimistic concurrency → immutability → generational collection → distributed consensus → data parallelism → delayed copy → epoch reclamation → conflict-free replication → ordered index → probabilistic balancing → probabilistic membership → kick-out hashing → variance-bounded probing → control-byte group probing → cardinality estimation → frequency estimation → heavy hitters → frequent items → unbiased frequency → set similarity。
+覆盖：source → compiler → binary → runtime → virtual memory → concurrency → storage → scheduling → async I/O → lock-free structures → data layout → message-passing → user-level scheduling → optimistic concurrency → immutability → generational collection → distributed consensus → data parallelism → delayed copy → epoch reclamation → conflict-free replication → ordered index → probabilistic balancing → probabilistic membership → kick-out hashing → variance-bounded probing → control-byte group probing → cardinality estimation → frequency estimation → heavy hitters → frequent items → unbiased frequency → set similarity → candidate generation。
 
 ## 现在就能跑的探针
 
